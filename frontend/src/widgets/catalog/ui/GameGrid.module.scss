@@ -1,0 +1,143 @@
+.grid-wrap,
+.catalog-info {
+  margin: 0 150px;
+}
+
+.grid-surface,
+.catalog-info {
+  background: var(--game-grid-bg);
+  padding: 35px;
+  border: 1px solid var(--section-border);
+  border-radius: var(--radius);
+}
+
+.catalog-info {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 32px;
+  min-height: 240px;
+}
+
+.games-grid {
+  display: grid;
+  gap: 35px;
+}
+
+.games-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.games-grid-loading,
+.games-grid-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 70px 0;
+  width: 100%;
+  text-align: center;
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+:global(.spinner).grid {
+  width: 60px;
+  height: 60px;
+  border-width: 6px;
+}
+
+@media (max-width: 1399px) {
+  .games-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .grid-wrap,
+  .catalog-info {
+    margin: 0 110px;
+  }
+}
+
+@media (max-width: 1099px) {
+  .games-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-wrap,
+  .catalog-info {
+    margin: 0 70px;
+  }
+}
+
+@media (max-width: 799px) {
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 1fr;
+  }
+
+  .grid-wrap,
+  .catalog-info {
+    margin: 0 50px;
+  }
+}
+
+@media (max-width: 549px) {
+  .games-grid {
+    grid-template-columns: repeat(1, 1fr);
+    width: 80%;
+    margin: 0 auto;
+    gap: 25px;
+  }
+
+  .catalog-info {
+    font-size: 28px;
+  }
+
+  .grid-surface,
+  .catalog-info {
+    padding: 25px;
+  }
+
+  .grid-wrap,
+  .catalog-info {
+    margin: 0 80px;
+  }
+}
+
+@media (max-width: 499px) {
+  .grid-wrap,
+  .catalog-info {
+    margin: 0 30px;
+  }
+
+  .catalog-info {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 399px) {
+  .games-grid {
+    width: 90%;
+  }
+
+  .catalog-info {
+    font-size: 20px;
+  }
+}
+
+.game-item {
+  min-width: 0;
+}
+
+.games-grid-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  text-align: center;
+  color: var(--text);
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 700;
+}

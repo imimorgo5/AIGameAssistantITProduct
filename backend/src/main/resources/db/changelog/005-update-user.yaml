@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 7
+      author: mihail
+      changes:
+        - modifyDataType:
+            tableName: uzer
+            columnName: password
+            newDataType: VARCHAR(255)

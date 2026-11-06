@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 8
+      author: mihail
+      changes:
+        - addColumn:
+            tableName: uzer
+            columns:
+              - column:
+                  name: image_file_title
+                  type: varchar(255)

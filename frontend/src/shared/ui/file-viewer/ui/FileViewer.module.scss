@@ -1,0 +1,302 @@
+.file-viewer-root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+  padding: 16px;
+  container-type: inline-size;
+  container-name: file-viewer;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.file-viewer-actions,
+.pdf-controls,
+.pdf-pagination,
+.pdf-zoom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-viewer-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.file-viewer-leading {
+  justify-self: start;
+}
+
+.file-viewer-close {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.file-viewer-title {
+  font-weight: 700;
+  font-size: 18px;
+  margin: 0;
+  max-width: 240px;
+  text-align: center;
+  color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-viewer-actions {
+  flex-wrap: nowrap;
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.file-viewer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.pdf-reader {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  gap: 12px;
+}
+
+.pdf-controls {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--section-border);
+  border-radius: var(--radius);
+  background: var(--muted-button-bg);
+}
+
+.pdf-button {
+  box-sizing: border-box;
+  line-height: 1.35;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 6px 10px;
+  border: 2px solid var(--yellow);
+  border-radius: var(--radius);
+  background: var(--yellow);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--transition),
+    color var(--transition),
+    border-color var(--transition),
+    opacity var(--transition),
+    transform var(--transition);
+}
+
+.pdf-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pdf-button:focus-visible,
+.pdf-page-input:focus-visible,
+.pdf-viewport:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.pdf-page-input {
+  box-sizing: border-box;
+  width: 54px;
+  min-height: 36px;
+  padding: 4px;
+  border: 1px solid var(--section-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: center;
+}
+
+.pdf-page-count,
+.pdf-zoom-value {
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--muted-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pdf-zoom-value {
+  min-width: 42px;
+  text-align: center;
+}
+
+.pdf-viewport {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 12px;
+  background: var(--image-bg);
+  border-radius: var(--radius);
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-text) transparent;
+}
+
+.pdf-viewport :global(.react-pdf__Document) {
+  width: max-content;
+  min-width: 100%;
+}
+
+.pdf-viewport :global(.react-pdf__Page) {
+  margin: 0 auto;
+  width: max-content;
+}
+
+.pdf-viewport :global(.react-pdf__Page canvas) {
+  display: block;
+}
+
+.fv-center,
+.fv-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 12px;
+  text-align: center;
+  color: var(--muted-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.fv-message p {
+  margin: 0;
+}
+
+.fv-error {
+  color: var(--danger);
+}
+
+.fv-image-wrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.fv-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .file-viewer-root {
+    padding: 12px;
+  }
+
+  .pdf-controls {
+    gap: 12px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pdf-button:not(:disabled):hover {
+    border-color: var(--yellow);
+    background: transparent;
+    color: var(--yellow);
+  }
+}
+
+.pdf-button:not(:disabled):active {
+  background: transparent;
+  color: var(--yellow);
+  transform: translateY(1px);
+}
+
+@container file-viewer (max-width: 520px) {
+  .file-viewer-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .file-viewer-title {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    max-width: 100%;
+    justify-self: center;
+  }
+
+  .file-viewer-leading {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .file-viewer-actions {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+
+.pdf-page-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdf-field-error {
+  color: var(--danger);
+  font-size: 12px;
+  max-width: 180px;
+}
+
+.pdf-page-slot {
+  margin: 0 auto 16px;
+  background: white;
+  overflow: hidden;
+}
+
+.pdf-page-slot:last-child {
+  margin-bottom: 0;
+}
+
+@container file-viewer (max-width: 520px) {
+  .pdf-controls { justify-content: center; }
+
+  .pdf-pagination, .pdf-zoom { justify-content: center; }
+}

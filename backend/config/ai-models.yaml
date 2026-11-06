@@ -1,0 +1,19 @@
+ai:
+  default-model: free
+  max-input-chars: 200000
+  models:
+    - id: fast
+      name: DeepSeek V4.1 Flash
+      remote-id: deepseek/deepseek-v4.1-flash-1017
+      enabled: true
+      max-output-tokens: 20000
+    - id: balanced
+      name: GLM 5.3 Flash
+      remote-id: z-ai/glm-5.3-flash
+      enabled: true
+      max-output-tokens: 20000
+    - id: free
+      name: NVIDIA Nemotron 3 Ultra
+      remote-id: nvidia/nemotron-3-ultra-550b-a55b:free
+      enabled: true
+      max-output-tokens: 20000

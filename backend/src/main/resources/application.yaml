@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: gameAssistantBackend
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  config:
+    import:
+      - optional:application-secret.yaml
+      - optional:file:./config/ai-models.yaml
+      - optional:file:./backend/config/ai-models.yaml
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/game_assistant_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+
+  liquibase:
+    enabled: true
+
+  mail:
+    host: ${SPRING_MAIL_HOST:localhost}
+    port: ${SPRING_MAIL_PORT:1025}
+    username: ${EMAIL_ADDRESS:}
+    password: ${EMAIL_APP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:false}
+          starttls:
+            enable: ${SMTP_STARTTLS:false}
+
+app:
+    public-url: ${APP_PUBLIC_URL:http://localhost}
+    admin:
+      email: ${ADMIN_EMAIL:}
+      login: ${ADMIN_LOGIN:admin}
+      password: ${ADMIN_PASSWORD:}
+
+jwt:
+  secret:
+    access: ${JWT_SECRET_ACCESS}
+    refresh: ${JWT_SECRET_REFRESH}
+
+ai:
+  openrouter:
+    api-key: ${OPENROUTER_API_KEY:}
+    base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
+    timeout-seconds: ${OPENROUTER_TIMEOUT_SECONDS:60}
+
+proxy:
+  host: ${PROXY_HOST:}
+  port: ${PROXY_PORT:1080}
+  login: ${PROXY_LOGIN:}
+  password: ${PROXY_PASSWORD:}

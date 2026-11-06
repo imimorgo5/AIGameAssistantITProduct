@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 36
+      author: mihail
+      changes:
+        - update:
+            tableName: uzer
+            columns:
+              - column:
+                  name: enabled
+                  valueBoolean: true
+            where: enabled IS NULL

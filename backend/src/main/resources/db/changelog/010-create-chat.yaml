@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 14
+      author: mihail
+      changes:
+        - createTable:
+            tableName: chat
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: uzer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_chat_uzer
+                    references: "uzer(id)"

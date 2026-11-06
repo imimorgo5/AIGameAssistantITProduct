@@ -1,0 +1,74 @@
+.prompt-editor-root {
+  width: 100%;
+}
+
+.prompt-editor-textarea {
+  width: calc(100% - 24px);
+  min-height: 300px;
+  max-height: 600px;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--text-input);
+  border: 1px solid var(--text-input-border);
+  color: var(--text);
+  resize: vertical;
+  overflow-y: auto;
+  outline: none;
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.prompt-editor-textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+.prompt-editor-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.prompt-editor-textarea::-webkit-scrollbar-thumb {
+  background-color: var(--muted-text);
+  border-radius: var(--radius);
+  transition: background-color var(--transition);
+}
+
+.prompt-editor-textarea::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text);
+}
+
+.prompt-editor-textarea::placeholder {
+  color: var(--muted-text);
+}
+
+.prompt-editor-textarea.view {
+  opacity: 0.95;
+}
+
+.prompt-editor-textarea.editing {
+  border-color: var(--muted-yellow);
+}
+
+.prompt-editor-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.prompt-editor-actions :global(.btn) {
+  padding: 5px 15px;
+}
+
+.prompt-editor-loading,
+.prompt-editor-error {
+  color: var(--muted-text);
+  font-size: 16px;
+}
+
+@media (max-width: 600px) {
+  .prompt-editor-textarea {
+    max-height: 180px;
+  }
+}

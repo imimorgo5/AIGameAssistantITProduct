@@ -1,0 +1,33 @@
+.static-1 {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.static-2 {
+  flex: 1;
+}
+
+.static-3 {
+  text-align: center;
+  padding: 16px;
+}
+
+.category-field {
+  display: flex;
+  flex: 0 1 320px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-error {
+  color: var(--danger);
+  font-size: 13px;
+}
+
+.category-field .static-2 {
+  width: 100%;
+  box-sizing: border-box;
+}

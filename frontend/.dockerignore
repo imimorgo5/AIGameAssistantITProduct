@@ -1,0 +1,14 @@
+.git
+.idea
+.vscode
+node_modules
+build
+coverage
+**/.DS_Store
+**/*.log
+.env
+.env.*
+# npm prebuild regenerates this file using the locked pdfjs-dist version.
+public/pdf.worker.min.mjs
+
+public/pdfjs/

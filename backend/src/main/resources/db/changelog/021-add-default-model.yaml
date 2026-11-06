@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 32
+      author: mihail
+      changes:
+        - update:
+            tableName: system_properties
+            columns:
+              - column:
+                  name: model
+                  value: "YANDEX_GPT"

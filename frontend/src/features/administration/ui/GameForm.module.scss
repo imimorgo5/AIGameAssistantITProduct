@@ -1,0 +1,79 @@
+.form-title {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.game-form .form-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.game-form .form-label {
+  width: 120px;
+  color: var(--muted-text);
+  font-size: 16px;
+}
+
+.game-form .form-input {
+  flex: 1;
+  padding: 10px 12px;
+  background: var(--text-input);
+  border: 1px solid var(--text-input-border);
+  border-radius: var(--radius);
+  color: var(--text);
+}
+
+.game-form .form-input:focus {
+  border-color: var(--muted-yellow);
+}
+
+textarea.form-input {
+  min-height: 70px;
+  max-height: 350px;
+  resize: vertical;
+}
+
+.file-note {
+  margin-top: 6px;
+  color: var(--muted-text);
+  font-size: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+
+@media (max-width: 950px) {
+  .form-title {
+    font-size: 20px;
+  }
+
+  .game-form .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .game-form .form-label {
+    width: auto;
+  }
+}
+
+.form-field-error {
+  color: var(--danger);
+  font-size: 13px;
+  flex-basis: 100%;
+  margin-left: 130px;
+}
+
+@media (max-width: 950px) {
+  .form-field-error {
+    margin-left: 0;
+  }
+}
+
+.game-form textarea.form-input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

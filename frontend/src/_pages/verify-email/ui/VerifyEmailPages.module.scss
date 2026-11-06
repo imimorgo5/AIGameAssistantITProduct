@@ -1,0 +1,47 @@
+.verify-container {
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  padding-bottom: 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  align-items: center;
+  justify-self: center;
+}
+
+.verify-title {
+  color: var(--text);
+  font-size: 48px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.verify-message {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.verify-loading-message {
+  color: var(--yellow);
+}
+
+.verify-success-message {
+  color: var(--green);
+}
+
+.verify-error-message {
+  color: var(--danger);
+}
+
+@media (max-width: 649px) {
+  .verify-title {
+    font-size: 36px;
+  }
+
+  .verify-message {
+    font-size: 18px;
+  }
+}

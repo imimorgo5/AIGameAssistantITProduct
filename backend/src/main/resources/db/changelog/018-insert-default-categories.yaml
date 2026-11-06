@@ -1,0 +1,83 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert-default-categories
+      author: mihail
+      changes:
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: EUROGAME
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: AMERITRASH
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: CONTROL_OF_TERRITORIES
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: WARGAME
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: ABSTRACT
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: FILLER
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: ROLE
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: CLASSIC_BOARD
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: BRAINTEASER
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: FAMILY
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: CARD
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: COOPERATIVE
+        - insert:
+            tableName: category
+            columns:
+              - column:
+                  name: name
+                  value: COLLECTION_CARD

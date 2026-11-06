@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-game-category
+      author: mihail
+      changes:
+        - createTable:
+            tableName: game_category
+            columns:
+              - column:
+                  name: game_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addPrimaryKey:
+            tableName: game_category
+            columnNames: game_id, category_id
+            constraintName: pk_game_category
+
+        - addForeignKeyConstraint:
+            baseTableName: game_category
+            baseColumnNames: game_id
+            referencedTableName: game
+            referencedColumnNames: id
+            constraintName: fk_gc_game
+            onDelete: NO ACTION
+
+        - addForeignKeyConstraint:
+            baseTableName: game_category
+            baseColumnNames: category_id
+            referencedTableName: category
+            referencedColumnNames: id
+            constraintName: fk_gc_category
+            onDelete: NO ACTION
+  

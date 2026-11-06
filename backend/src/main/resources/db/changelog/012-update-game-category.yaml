@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 16
+      author: mihail
+      changes:
+        - addColumn:
+            tableName: game
+            columns:
+              - column:
+                  name: category
+                  type: VARCHAR(30)

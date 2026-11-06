@@ -1,0 +1,133 @@
+.chat-message {
+  display: flex;
+  width: 100%;
+}
+
+.chat-message.user {
+  justify-content: flex-end;
+}
+
+.chat-message.bot,
+.chat-message.error {
+  justify-content: flex-start;
+}
+
+.chat-message-bubble {
+  max-width: 75%;
+  background: var(--message-bubble-bg);
+  color: var(--chat-message-bubble-text);
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  border-bottom-right-radius: 0;
+  word-break: break-word;
+}
+
+.chat-message-plain {
+  width: 100%;
+  padding: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.streaming-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: 2px;
+  font-size: 24px;
+}
+
+.streaming-dots span {
+  display: inline-block;
+  will-change: transform, opacity;
+  transform: translateY(0);
+  animation: streaming-bounce 1.2s ease-in-out infinite;
+}
+
+.streaming-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.streaming-dots span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.streaming-dots span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes streaming-bounce {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: translate3d(0, -4px, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.5;
+  }
+}
+
+.chat-message.error .chat-message-text {
+  color: var(--danger);
+}
+
+.chat-message-text {
+  white-space: pre-wrap;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.chat-message-actions {
+  margin-top: 5px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.copy-icon-btn {
+  background: none;
+  border: none;
+  color: var(--muted-text);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  transition: color var(--transition);
+}
+
+.copy-icon-btn:active {
+  color: var(--text);
+}
+
+.copy-icon-btn:active .copy-icon {
+  transform: scale(1.1);
+}
+
+.copy-icon-btn.copied {
+  color: var(--text);
+  cursor: unset;
+}
+
+.copy-icon {
+  transition: transform var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .copy-icon-btn:hover {
+    color: var(--text);
+  }
+
+  .copy-icon-btn:hover .copy-icon {
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 650px) {
+  .chat-message-bubble {
+    max-width: 90%;
+  }
+}

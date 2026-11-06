@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: drop-old-category-column
+      author: mihail
+      changes:
+        - dropColumn:
+            tableName: game
+            columnName: category

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 35
+      author: mihail
+      changes:
+        - addColumn:
+            tableName: uzer
+            columns:
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+              - column:
+                  name: verification_token
+                  type: VARCHAR(255)

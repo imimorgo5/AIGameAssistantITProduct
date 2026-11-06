@@ -1,0 +1,51 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+**/application-secret.yaml
+**/application-secret.yml
+**/application-local.yaml
+**/application-local.yml
+*.pem
+*.key
+*.p12
+*.jks
+
+# Dependencies, builds and runtime data
+**/node_modules/
+**/.gradle/
+**/build/
+**/bin/
+**/out/
+**/coverage/
+**/uploads/
+backend/lib/*.jar
+*.log
+*.dump
+*.backup
+*.bak
+*.class
+*.hprof
+hs_err_pid*
+replay_pid*
+*.tsbuildinfo
+**/dist/
+**/.cache/
+**/.sass-cache/
+**/.eslintcache
+**/.stylelintcache
+**/.npm/
+**/.nyc_output/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.iml
+.DS_Store
+._*
+Thumbs.db
+*.swp
+*.swo
+
+# Keep the Gradle wrapper: it is required to build a fresh checkout.
+!backend/gradle/wrapper/gradle-wrapper.jar

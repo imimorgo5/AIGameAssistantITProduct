@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: mihail
+      changes:
+        - dropTable:
+            tableName: token
+            cascadeConstraints: true
+
+        - createTable:
+            tableName: token
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: body
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: uzer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    unique: true
+
+        - addForeignKeyConstraint:
+            baseTableName: token
+            baseColumnNames: uzer_id
+            referencedTableName: uzer
+            referencedColumnNames: id
+            constraintName: fk_token_uzer
+            onDelete:

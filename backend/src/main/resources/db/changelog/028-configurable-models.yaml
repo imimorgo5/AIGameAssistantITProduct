@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 36
+      author: aigameassistant
+      changes:
+        - modifyDataType:
+            tableName: uzer
+            columnName: model
+            newDataType: VARCHAR(128)
+        - modifyDataType:
+            tableName: system_properties
+            columnName: model
+            newDataType: VARCHAR(128)
+        - sql:
+            sql: "UPDATE uzer SET model = NULL WHERE model IN ('OPENAI', 'YANDEX_GPT', 'MISTRAL'); UPDATE system_properties SET model = NULL WHERE model IN ('OPENAI', 'YANDEX_GPT', 'MISTRAL');"
+        - addColumn:
+            tableName: message
+            columns:
+              - column: {name: model_id, type: VARCHAR(128)}
+              - column: {name: remote_model, type: VARCHAR(256)}
+              - column: {name: provider, type: VARCHAR(128)}
+              - column: {name: input_tokens, type: INTEGER}
+              - column: {name: output_tokens, type: INTEGER}
+              - column: {name: duration_ms, type: BIGINT}

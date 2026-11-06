@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 17
+      author: mihail
+      changes:
+        - delete:
+            tableName: prompt
+
+        - insert:
+            tableName: prompt
+            columns:
+              - column:
+                  name: text
+                  value: "Тут должен быть промпт"

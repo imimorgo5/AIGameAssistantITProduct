@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 10
+      author: mihail
+      changes:
+        - createTable:
+            tableName: uzer_favourites
+            columns:
+              - column:
+                  name: uzer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: game_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: uzer_favourites
+            columnNames: uzer_id, game_id
+            constraintName: pk_uzer_favourites
+        - addForeignKeyConstraint:
+            baseTableName: uzer_favourites
+            baseColumnNames: uzer_id
+            constraintName: fk_uzer_favourites_uzer
+            referencedTableName: uzer
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: uzer_favourites
+            baseColumnNames: game_id
+            constraintName: fk_uzer_favourites_game
+            referencedTableName: game
+            referencedColumnNames: id
+            onDelete: CASCADE

@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 12
+      author: mihail
+      changes:
+        - createTable:
+            tableName: prompt
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: text
+                  type: TEXT
+                  constraints:
+                    nullable: false

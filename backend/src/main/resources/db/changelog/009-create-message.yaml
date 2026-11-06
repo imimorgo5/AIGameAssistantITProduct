@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 13
+      author: mihail
+      changes:
+        - createTable:
+            tableName: message
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: role
+                  type: VARCHAR(50)
+              - column:
+                  name: text
+                  type: TEXT
+              - column:
+                  name: timestamp
+                  type: TIMESTAMP
+              - column:
+                  name: chat_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_message_chat
+                    references: "chat(id)"

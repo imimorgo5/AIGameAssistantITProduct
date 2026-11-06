@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 30
+      author: mihail
+      changes:
+        - renameTable:
+            oldTableName: prompt
+            newTableName: system_properties
+
+        - renameColumn:
+            tableName: system_properties
+            oldColumnName: text
+            newColumnName: prompt
+            columnDataType: TEXT
+
+        - addColumn:
+            tableName: system_properties
+            columns:
+              - column:
+                  name: model
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: true

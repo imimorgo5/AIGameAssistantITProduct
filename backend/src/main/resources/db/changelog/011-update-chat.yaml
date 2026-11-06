@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 15
+      author: mihail
+      changes:
+        - addColumn:
+            tableName: chat
+            columns:
+              - column:
+                  name: game_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+              - column:
+                  name: last_use_time
+                  type: TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: chat
+            baseColumnNames: game_id
+            constraintName: fk_chat_game
+            referencedTableName: game
+            referencedColumnNames: id
+            onDelete: CASCADE

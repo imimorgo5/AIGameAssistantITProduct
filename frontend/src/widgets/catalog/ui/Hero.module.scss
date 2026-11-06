@@ -1,0 +1,187 @@
+.hero-root {
+  position: relative;
+  padding: 100px 0 70px 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    var(--hero-image-gradient), url("../../../shared/assets/hero-bg.png");
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(0.02) brightness(0.6);
+}
+
+.hero-inner {
+  position: relative;
+  display: flex;
+  width: calc(100% - 100px);
+  margin: 0 50px;
+  align-items: center;
+}
+
+.hero-left {
+  flex: 0 0 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-title {
+  margin: 60px 20px 60px 0;
+  font-size: 40px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--card-text);
+}
+
+.hero-right {
+  width: 55%;
+  margin: 0 auto;
+}
+
+.top-label {
+  margin-bottom: 10px;
+  font-weight: 800;
+  font-size: 24px;
+  text-align: center;
+  color: var(--card-text);
+}
+
+@media (max-width: 1399px) {
+  .hero-left {
+    flex: 0 0 35%;
+  }
+
+  .hero-right {
+    width: 60%;
+  }
+
+  .hero-title {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .hero-left {
+    flex: 0 0 40%;
+  }
+
+  .hero-right {
+    width: 55%;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 999px) {
+  .hero-left {
+    flex: 0 0 35%;
+  }
+
+  .hero-right {
+    width: 60%;
+  }
+
+  .hero-title {
+    font-size: 34px;
+  }
+}
+
+@media (max-width: 899px) {
+  .hero-root {
+    padding: 70px 0 30px 0;
+  }
+
+  .hero-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-left {
+    width: 100%;
+    padding-bottom: 20px;
+  }
+
+  .hero-title {
+    margin: 0 auto;
+  }
+
+  .hero-right {
+    width: 100%;
+    padding-left: 0;
+    margin-bottom: 46px;
+  }
+}
+
+@media (max-width: 799px) {
+  .hero-title {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 649px) {
+  .hero-title {
+    font-size: 24px;
+  }
+
+  .top-label {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 599px) {
+  .hero-root {
+    padding: 120px 0 10px 0;
+  }
+}
+
+@media (max-width: 549px) {
+  .hero-root {
+    padding: 120px 0 0 0;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .top-label {
+    font-size: 24px;
+  }
+
+  .hero-right {
+    margin-bottom: 70px;
+    width: 80%;
+  }
+
+  .hero-inner {
+    width: 90%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 499px) {
+  .hero-title {
+    font-size: 24px;
+  }
+
+  .top-label {
+    font-size: 20px;
+  }
+
+  .hero-right {
+    width: 90%;
+  }
+}
+
+@media (max-width: 399px) {
+  .hero-right {
+    width: 100%;
+  }
+}

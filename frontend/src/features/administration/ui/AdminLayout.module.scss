@@ -1,0 +1,134 @@
+.admin-root {
+  min-height: 100dvh;
+  padding: 24px;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--admin-section-bg);
+  padding: 18px 22px;
+  border-radius: var(--radius);
+  border: 1px solid var(--section-border);
+  margin-bottom: 20px;
+}
+
+.admin-header-left {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-header-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.main-link {
+  font-size: 18px;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin: 0 20px;
+}
+
+.admin-tab {
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-size: 18px;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition:
+    color var(--transition),
+    text-decoration-color var(--transition);
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-tab.active {
+  color: var(--yellow);
+  text-decoration-color: var(--yellow);
+  text-underline-offset: 3px;
+}
+
+.admin-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-section {
+  min-width: 0;
+  background: var(--admin-section-bg);
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--section-border);
+}
+
+
+.admin-header .admin-btn-logout {
+  padding: 5px 15px;
+  font-size: 16px;
+}
+
+.admin-btn-add {
+  width: 35px;
+  height: 35px;
+  font-size: 20px;
+}
+
+@media (max-width: 950px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .admin-header-left {
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .admin-header-right {
+    gap: 10px;
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header {
+    padding: 12px;
+  }
+
+  .admin-tabs {
+    flex-direction: column;
+    gap: 5px;
+    margin: 0;
+  }
+
+  .admin-header-left h1 {
+    font-size: 18px;
+  }
+}
+
+.admin-loading {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+@media (max-width: 599px) {
+  .admin-model { --select-max-width: 100%; }
+}
