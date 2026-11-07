@@ -1,5 +1,4 @@
 import { requestCache } from "shared/api/cache";
-import { getAccessToken, getRefreshToken } from "shared/lib/storage";
 
 import { apiClient } from "./axios";
 
@@ -15,12 +14,7 @@ export async function read<T>(
   const load = async () =>
     parse((await apiClient.get<unknown>(url, config)).data);
 
-  const key = JSON.stringify([
-    getRefreshToken() ?? getAccessToken(),
-    url,
-    config.params,
-    config.responseType,
-  ]);
+  const key = JSON.stringify([url, config.params, config.responseType]);
 
   return requestCache.read(key, load, ttl, tags);
 }

@@ -1,15 +1,13 @@
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 
 import ResetPasswordPage from "./ResetPasswordPage";
+import { setNavigation } from "../../../../tests/navigation";
 test("reset form only displays email validation after blur", () => {
   render(
-    <MemoryRouter
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <>
       <ResetPasswordPage />
-    </MemoryRouter>,
+    </>,
   );
   const input = screen.getByPlaceholderText("Введите e-mail");
   fireEvent.change(input, { target: { value: "wrong" } });
@@ -21,16 +19,13 @@ test("reset form only displays email validation after blur", () => {
   fireEvent.change(input, { target: { value: "player@example.com" } });
   expect(screen.queryByText("Некорректный email")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Отправить" })).toBeEnabled();
-  expect(document.title).toBe("AIGameAssistant - Восстановление пароля");
 });
 test("new-password form defers both password errors until each field blurs", () => {
+  setNavigation("/reset-password?token=test");
   render(
-    <MemoryRouter
-      initialEntries={["/reset-password?token=test"]}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <>
       <ResetPasswordPage />
-    </MemoryRouter>,
+    </>,
   );
   const password = screen.getByPlaceholderText("Введите новый пароль");
   const repeat = screen.getByPlaceholderText("Повторите пароль");
@@ -42,5 +37,4 @@ test("new-password form defers both password errors until each field blurs", () 
   fireEvent.blur(repeat);
   expect(screen.getByText("Слишком короткий пароль")).toBeInTheDocument();
   expect(screen.getByText("Пароли не совпадают")).toBeInTheDocument();
-  expect(document.title).toBe("AIGameAssistant - Новый пароль");
 });

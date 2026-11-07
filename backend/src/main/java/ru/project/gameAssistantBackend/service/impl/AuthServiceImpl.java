@@ -86,13 +86,16 @@ public class AuthServiceImpl implements AuthServiceI {
         return userServiceImpl.create(userRequestDTO);
     }
 
+    @Transactional
     public User validateVerificationToken(String token) throws UserNotFoundException {
+        if (token == null || token.isBlank()) throw new UserNotFoundException("Ссылка подтверждения недействительна");
         User user = userRepository.findByVerificationToken(token).orElse(null);
         if (user == null) {
             throw new UserNotFoundException("Пользователь не найден");
         }
 
         user.setEnabled(true);
+        user.setVerificationToken(null);
         return userRepository.save(user);
     }
 
@@ -102,8 +105,8 @@ public class AuthServiceImpl implements AuthServiceI {
             final Claims claims = jwtProvider.getRefreshClaims(refreshToken);
             final String email = claims.getSubject();
             User user = userServiceImpl.getByEmail(email);
-            String saveRefreshToken = tokenRepository.findByUser(user).get().getBody();
-            if (saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
+            String saveRefreshToken = tokenRepository.findByUser(user).map(Token::getBody).orElse(null);
+            if (user.isEnabled() && saveRefreshToken != null && saveRefreshToken.equals(refreshToken)) {
                 final String accessToken = jwtProvider.generateAccessToken(user);
                 return new JwtResponse(accessToken, null);
             }
@@ -120,7 +123,7 @@ public class AuthServiceImpl implements AuthServiceI {
             final String email = claims.getSubject();
             User user = userServiceImpl.getByEmail(email);
             Optional<Token> saveRefreshToken = tokenRepository.findByUser(user);
-            if (saveRefreshToken.isPresent() && saveRefreshToken.get().getBody().equals(refreshToken)) {
+            if (user.isEnabled() && saveRefreshToken.isPresent() && saveRefreshToken.get().getBody().equals(refreshToken)) {
                 final String accessToken = jwtProvider.generateAccessToken(user);
                 final String newRefreshToken = jwtProvider.generateRefreshToken(user);
                 Token existingToken = tokenRepository.findByUser(user)

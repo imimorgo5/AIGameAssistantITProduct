@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+
 import { bindClasses } from "shared/lib/styles";
 
 import styles from "./SelectDropdown.module.scss";
@@ -6,10 +7,10 @@ import styles from "./SelectDropdown.module.scss";
 type Item =
   | string
   | {
-    id: string | number;
-    name?: string;
-    title?: string;
-  };
+      id: string | number;
+      name?: string;
+      title?: string;
+    };
 
 interface BaseProps<T> {
   appearance?: "field" | "filter" | "wide" | "compact";
@@ -26,15 +27,15 @@ interface BaseProps<T> {
 type Props<T> = BaseProps<T> &
   (
     | {
-      multiple: true;
-      value: T[];
-      onChange: (value: T[]) => void;
-    }
+        multiple: true;
+        value: T[];
+        onChange: (value: T[]) => void;
+      }
     | {
-      multiple?: false;
-      value: T | null;
-      onChange: (value: T | null) => void;
-    }
+        multiple?: false;
+        value: T | null;
+        onChange: (value: T | null) => void;
+      }
   );
 
 const cx = bindClasses(styles);
@@ -52,9 +53,15 @@ export default function SelectDropdown<T extends Item>(props: Props<T>) {
   } = props;
 
   const [open, setOpen] = useState(false);
-  const [list, setList] = useState<T[]>(items ?? []);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [requestId, setRequestId] = useState(0);
+  const [result, setResult] = useState<{
+    id: number;
+    list: T[];
+    error: boolean;
+  } | null>(null);
+  const list = items ?? result?.list ?? [];
+  const loading = !items && open && result?.id !== requestId;
+  const error = !items && result?.id === requestId && result.error;
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const fetchRef = useRef(fetchItems);
@@ -63,43 +70,21 @@ export default function SelectDropdown<T extends Item>(props: Props<T>) {
     fetchRef.current = fetchItems;
   }, [fetchItems]);
   useEffect(() => {
-    if (items) {
-      setList(items);
-
-      return;
-    }
-
-    if (!open) {
-      setLoading(false);
-
-      return;
-    }
-
+    if (items || !open) return;
     let cancelled = false;
     const fetcher = fetchRef.current;
-    if (!fetcher) return;
-
-    setLoading(true);
-    setError(false);
-    Promise.resolve()
-      .then(fetcher)
-      .then((result) => {
-        if (!cancelled) setList(result);
+    void Promise.resolve()
+      .then(() => (fetcher ? fetcher() : []))
+      .then((data) => {
+        if (!cancelled) setResult({ id: requestId, list: data, error: false });
       })
       .catch(() => {
-        if (!cancelled) {
-          setList([]);
-          setError(true);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setResult({ id: requestId, list: [], error: true });
       });
-
     return () => {
       cancelled = true;
     };
-  }, [items, open]);
+  }, [items, open, requestId]);
   useEffect(() => {
     const outside = (event: MouseEvent) => {
       if (event.target instanceof Node && !root.current?.contains(event.target))
@@ -156,6 +141,7 @@ export default function SelectDropdown<T extends Item>(props: Props<T>) {
         if (event.key === "ArrowDown" || event.key === "ArrowUp") {
           event.preventDefault();
           if (!open) {
+            setRequestId((value) => value + 1);
             setOpen(true);
 
             return;
@@ -188,7 +174,10 @@ export default function SelectDropdown<T extends Item>(props: Props<T>) {
         className={cx(
           `seldd-button ${open ? "open" : ""} ${selected.length ? "" : "unset"}`,
         )}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => {
+          setRequestId((value) => value + 1);
+          setOpen((value) => !value);
+        }}
       >
         <span className={cx("seldd-label")} title={display}>
           {loading ? "Загрузка..." : display}

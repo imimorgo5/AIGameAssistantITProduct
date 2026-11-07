@@ -1,5 +1,6 @@
-import { promptApi } from "entities/ai";
 import { useEffect, useRef, useState } from "react";
+
+import { promptApi } from "entities/ai";
 import { errorMessage } from "shared/lib/errors";
 import { textError, useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
@@ -98,7 +99,11 @@ export default function PromptEditor() {
         />
       )}
 
-      {isEditing && field.error && <div className={cx("prompt-editor-error")} role="alert">{field.error}</div>}
+      {isEditing && field.error && (
+        <div className={cx("prompt-editor-error")} role="alert">
+          {field.error}
+        </div>
+      )}
       {isEditing && (
         <div className={cx("prompt-editor-actions")}>
           <button
@@ -108,7 +113,11 @@ export default function PromptEditor() {
           >
             Отменить
           </button>
-          <button className={cx("btn")} onClick={handleSave} disabled={saving || !!textError(draft, 10000)}>
+          <button
+            className={cx("btn")}
+            onClick={handleSave}
+            disabled={saving || !!textError(draft, 10000)}
+          >
             Сохранить
           </button>
         </div>

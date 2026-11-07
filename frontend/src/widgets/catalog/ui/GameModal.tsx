@@ -1,7 +1,9 @@
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
 import { favouriteApi, gameApi } from "entities/game";
 import { useAuth } from "entities/session";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { fileApi } from "shared/api/file";
 import { errorMessage } from "shared/lib/errors";
 import { bindClasses } from "shared/lib/styles";
@@ -20,12 +22,15 @@ interface Props {
   onFavouriteChange?: (game: Game, favourite: boolean) => void;
 }
 
-export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
+export default function GameModal(props: Props) {
+  return <GameModalContent key={props.game.id} {...props} />;
+}
+
+function GameModalContent({ game, onClose, onFavouriteChange }: Props) {
   const [rulesOpen, setRulesOpen] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [gameData, setGameData] = useState<Game | null>(null);
-  const [loadingImage, setLoadingImage] = useState(false);
   const [loadingGame, setLoadingGame] = useState(true);
   const [isFavourite, setIsFavourite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
@@ -45,15 +50,13 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
   }, []);
   useEffect(() => {
     let cancelled = false;
-    setGameData(null);
     (async () => {
-      setLoadingGame(true);
       try {
         const data = await gameApi.read(game.id);
         if (cancelled) return;
 
         if (mountedRef.current) setGameData(data);
-      } catch (err) {
+      } catch {
         if (!cancelled && mountedRef.current) setGameData(null);
       } finally {
         if (!cancelled && mountedRef.current) setLoadingGame(false);
@@ -66,11 +69,7 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
   }, [game]);
   useEffect(() => {
     let cancelled = false;
-    if (!isAuthenticated) {
-      setIsFavourite(false);
-
-      return;
-    }
+    if (!isAuthenticated) return;
 
     if (!gameData?.id) return;
 
@@ -91,24 +90,9 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
       cancelled = true;
     };
   }, [gameData, isAuthenticated]);
-  useEffect(() => {
-    setLoadingImage(!!gameData?.imageFileTitle);
-    if (!gameData?.imageFileTitle) {
-      setLoadingImage(false);
-
-      return;
-    }
-  }, [gameData?.imageFileTitle]);
-  useEffect(() => {
-    setLoadingImage(Boolean(blobLoading));
-  }, [blobLoading]);
-  const handleImgLoad = () => {
-    if (mountedRef.current) setLoadingImage(false);
-  };
-
   const toggleFavourite = async () => {
     if (!isAuthenticated) {
-      navigate("/login");
+      router.push("/login");
 
       return;
     }
@@ -130,7 +114,9 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
     } catch (err) {
       if (mountedRef.current) setIsFavourite(prev);
 
-      alert(errorMessage(err, "Не удалось обновить избранное. Попробуйте ещё раз."));
+      alert(
+        errorMessage(err, "Не удалось обновить избранное. Попробуйте ещё раз."),
+      );
     } finally {
       if (mountedRef.current) setFavLoading(false);
     }
@@ -147,7 +133,12 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
   if (rulesOpen && gameData?.rulesFileTitle) {
     return (
       <Modal variant="viewer" onClose={() => setRulesOpen(false)}>
-        <FileViewer fileType="pdf" fileTitle={gameData.rulesFileTitle} title="Правила игры" onClose={() => setRulesOpen(false)} />
+        <FileViewer
+          fileType="pdf"
+          fileTitle={gameData.rulesFileTitle}
+          title="Правила игры"
+          onClose={() => setRulesOpen(false)}
+        />
       </Modal>
     );
   }
@@ -170,14 +161,16 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
               <div className={cx("gm-image-wrap")}>
                 {imageUrl ? (
                   <>
-                    <img
+                    <Image
+                      unoptimized
+                      width={512}
+                      height={512}
                       src={imageUrl}
                       alt={gameData?.title || "game image"}
                       className={cx("modal-image")}
-                      onLoad={handleImgLoad}
                     />
                   </>
-                ) : loadingImage ? (
+                ) : blobLoading ? (
                   <div className={cx("modal-image placeholder")}>
                     <div className={cx("spinner")} />
                   </div>
@@ -272,7 +265,7 @@ export default function GameModal({ game, onClose, onFavouriteChange }: Props) {
 
                 <button
                   className={cx("btn gm-circle-btn")}
-                  onClick={() => navigate(`/games/ai/${gameData?.id}`)}
+                  onClick={() => router.push(`/games/ai/${gameData?.id}`)}
                   disabled={loadingGame || !gameData}
                   title="Задать вопрос"
                   aria-label="Задать вопрос"

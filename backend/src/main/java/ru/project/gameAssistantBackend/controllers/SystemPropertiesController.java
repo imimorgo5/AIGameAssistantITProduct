@@ -46,14 +46,14 @@ public class SystemPropertiesController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/prompt")
-    public SystemPropertiesDTO updatePrompt(@RequestBody SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
+    public SystemPropertiesDTO updatePrompt(@jakarta.validation.Valid @RequestBody SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
         SystemProperties systemProperties = systemPropertiesServiceImpl.updatePrompt(systemPropertiesDTO);
         return mapToDTO(systemProperties);
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/model")
-    public SystemPropertiesDTO updateModel(@RequestBody SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
+    public SystemPropertiesDTO updateModel(@jakarta.validation.Valid @RequestBody SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
         catalog.requireEnabled(systemPropertiesDTO.model());
         SystemProperties systemProperties = systemPropertiesServiceImpl.updateModel(systemPropertiesDTO);
         return mapToDTO(systemProperties);

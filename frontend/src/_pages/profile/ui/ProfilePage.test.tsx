@@ -1,9 +1,9 @@
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
+
 import { chatApi } from "entities/chat";
 import { gameApi } from "entities/game";
 import { userApi } from "entities/session";
-import { MemoryRouter } from "react-router-dom";
 
 import ProfilePage from "./ProfilePage";
 jest.mock("widgets/header", () => ({ Header: () => <header /> }));
@@ -33,11 +33,9 @@ test("profile password errors appear only after the corresponding blur", async (
     size: 8,
   });
   render(
-    <MemoryRouter
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <>
       <ProfilePage />
-    </MemoryRouter>,
+    </>,
   );
   fireEvent.click(
     await screen.findByRole("button", { name: "Сменить пароль" }),

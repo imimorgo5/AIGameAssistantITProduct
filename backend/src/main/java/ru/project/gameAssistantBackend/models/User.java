@@ -30,7 +30,12 @@ public class User extends BaseEntity{
 
     private String passwordResetToken;
 
-    @ManyToMany(cascade = CascadeType.ALL)
+    private java.time.Instant passwordResetExpiresAt;
+
+    public java.time.Instant getPasswordResetExpiresAt() { return passwordResetExpiresAt; }
+    public void setPasswordResetExpiresAt(java.time.Instant value) { passwordResetExpiresAt = value; }
+
+    @ManyToMany
     @JoinTable(
             name = "uzer_favourites",
             joinColumns = @JoinColumn(name = "uzer_id"),
@@ -38,7 +43,7 @@ public class User extends BaseEntity{
     )
     private Set<Game> games = new HashSet<>();
 
-    @OneToMany(mappedBy = "uzer")
+    @OneToMany(mappedBy = "uzer", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Chat> chats;
 
     public User(String email, String login, String password, Role role, String imageFileTitle) {

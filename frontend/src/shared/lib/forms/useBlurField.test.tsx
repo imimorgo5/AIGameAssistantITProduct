@@ -6,11 +6,18 @@ import { useBlurField } from "./index";
 
 function Form() {
   const [value, setValue] = useState("");
-  const field = useBlurField(value, (value) => value.length < 4 ? "Слишком коротко" : "");
+  const field = useBlurField(value, (value) =>
+    value.length < 4 ? "Слишком коротко" : "",
+  );
 
   return (
     <div>
-      <input aria-label="Поле" value={value} onChange={(event) => setValue(event.target.value)} onBlur={field.onBlur} />
+      <input
+        aria-label="Поле"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={field.onBlur}
+      />
       {field.error && <p role="alert">{field.error}</p>}
     </div>
   );

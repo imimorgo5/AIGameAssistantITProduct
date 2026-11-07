@@ -3,18 +3,23 @@ services:
     build:
       context: ./frontend
     ports:
-      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-80}:80"
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-80}:3000"
+    environment:
+      BACKEND_URL: http://backend:8080
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost}
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
     restart: unless-stopped
 
   backend:
+    ports:
+      - "127.0.0.1:8080:8080"
     build:
       context: ./backend
     environment:

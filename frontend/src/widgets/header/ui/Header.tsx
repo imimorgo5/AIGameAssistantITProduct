@@ -1,13 +1,16 @@
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import logo from "shared/assets/LOGO.svg";
-import searchIcon from "shared/assets/search-icon.svg";
+
 import { bindClasses } from "shared/lib/styles";
 
 import style0 from "./Header.module.scss";
 import UserMenu from "./UserMenu";
 
 import type { User } from "entities/session";
+
+const logo = "/images/LOGO.svg";
+const searchIcon = "/images/search-icon.svg";
 
 interface Props {
   appearance?: "catalog" | "plain";
@@ -50,8 +53,14 @@ export default function Header({
     >
       <div className={cx("header-inner")}>
         <div className={cx("header-left")}>
-          <Link to="/" className={cx("logo")}>
-            <img src={logo} alt="AIGameAssistant" />
+          <Link href="/" className={cx("logo")}>
+            <Image
+              unoptimized
+              width={112}
+              height={42}
+              src={logo}
+              alt="AIGameAssistant"
+            />
           </Link>
         </div>
 
@@ -60,13 +69,20 @@ export default function Header({
             <div className={cx("search-wrap")}>
               <input
                 type="text"
+                aria-label="Поиск игр"
                 maxLength={100}
                 className={cx("search-input")}
                 value={search}
                 onChange={(e) => onSearchChange?.(e.target.value)}
               />
               <span className={cx("search-icon")} aria-hidden="true">
-                <img src={searchIcon} alt="Поиск" />
+                <Image
+                  unoptimized
+                  width={20}
+                  height={20}
+                  src={searchIcon}
+                  alt="Поиск"
+                />
               </span>
             </div>
           )}
@@ -86,13 +102,20 @@ export default function Header({
             <div className={cx("search-wrap")}>
               <input
                 type="text"
+                aria-label="Поиск игр"
                 maxLength={100}
                 className={cx("search-input")}
                 value={search}
                 onChange={(e) => onSearchChange?.(e.target.value)}
               />
               <span className={cx("search-icon")} aria-hidden="true">
-                <img src={searchIcon} alt="Поиск" />
+                <Image
+                  unoptimized
+                  width={20}
+                  height={20}
+                  src={searchIcon}
+                  alt="Поиск"
+                />
               </span>
             </div>
           ) : (

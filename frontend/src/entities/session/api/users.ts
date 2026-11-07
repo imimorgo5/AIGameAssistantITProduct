@@ -74,10 +74,6 @@ export const userApi = {
     ),
   updateImage: (id: Id, input: UserImageInput) => {
     const data = new FormData();
-    data.append("email", input.email);
-    data.append("login", input.login);
-    data.append("password", input.password);
-    data.append("isAdmin", String(input.isAdmin));
     if (input.imageFile) data.append("imageFile", input.imageFile);
 
     return mutate(

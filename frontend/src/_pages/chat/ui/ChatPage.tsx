@@ -1,6 +1,9 @@
+"use client";
+
+import { useParams } from "next/navigation";
+
 import { ChatMessage, ChatSidebarItem } from "entities/chat";
 import { ModelSelect } from "features/model-select";
-import { usePageTitle } from "shared/lib/page-title";
 import { bindClasses } from "shared/lib/styles";
 import { FileViewer } from "shared/ui/file-viewer";
 import { Modal, ModalActions } from "shared/ui/modal";
@@ -10,6 +13,11 @@ import style0 from "./ChatPage.module.scss";
 import RulesIcon from "./RulesIcon";
 import { useChat } from "../model/useChat";
 export default function ChatPage() {
+  const params = useParams<{ segments?: string[] }>();
+  return <ChatContent key={params.segments?.[0] ?? "none"} />;
+}
+
+function ChatContent() {
   const {
     currentUser,
     gameLoading,
@@ -35,7 +43,7 @@ export default function ChatPage() {
     loadingMore,
     setVisibleCount,
     routeGameId,
-    navigate,
+    router,
     chatError,
     chatLoading,
     messages,
@@ -50,12 +58,6 @@ export default function ChatPage() {
     confirmState,
     setConfirmState,
   } = useChat();
-
-  usePageTitle(
-    game
-      ? `Чат — ${game.title}${activeSession ? ` — ${activeSession.title}` : " — Новый диалог"}`
-      : "Выбор игры для чата",
-  );
 
   return (
     <div className={cx("chat-root")}>
@@ -204,7 +206,7 @@ export default function ChatPage() {
                   </div>
                   <button
                     className={cx("btn btn-to-main")}
-                    onClick={() => navigate("/")}
+                    onClick={() => router.push("/")}
                   >
                     Посмотреть доступные игры
                   </button>
@@ -218,7 +220,7 @@ export default function ChatPage() {
                   </div>
                   <button
                     className={cx("btn btn-to-main")}
-                    onClick={() => navigate("/")}
+                    onClick={() => router.push("/")}
                   >
                     Посмотреть доступные игры
                   </button>
@@ -240,8 +242,8 @@ export default function ChatPage() {
                     messages.length === 0 &&
                     !sending &&
                     !activeSession && (
-                    <div className={cx("chat-muted")}>Чем я могу помочь?</div>
-                  )}
+                      <div className={cx("chat-muted")}>Чем я могу помочь?</div>
+                    )}
                   {!chatLoading && !chatError && (
                     <div className={cx("chat-messages")} ref={messagesRef}>
                       <div className={cx("messages-inner")}>
@@ -263,7 +265,9 @@ export default function ChatPage() {
                           maxLength={10000}
                           onBlur={inputField.onBlur}
                           aria-invalid={!!inputField.error}
-                          aria-describedby={inputField.error ? "chat-input-error" : undefined}
+                          aria-describedby={
+                            inputField.error ? "chat-input-error" : undefined
+                          }
                           onChange={(e) => {
                             setInput(e.target.value);
                           }}
@@ -272,13 +276,25 @@ export default function ChatPage() {
                           disabled={!game}
                           aria-label="Текст сообщения"
                         />
-                        {inputField.error && <div id="chat-input-error" className={cx("chat-input-error")} role="alert">{inputField.error}</div>}
+                        {inputField.error && (
+                          <div
+                            id="chat-input-error"
+                            className={cx("chat-input-error")}
+                            role="alert"
+                          >
+                            {inputField.error}
+                          </div>
+                        )}
                       </div>
                       <button
                         className={cx("btn send-btn")}
                         onClick={handleSend}
                         disabled={
-                          sending || modelChanging || !input.trim() || input.length > 10000 || !game
+                          sending ||
+                          modelChanging ||
+                          !input.trim() ||
+                          input.length > 10000 ||
+                          !game
                         }
                         aria-label="Отправить"
                         title="Отправить"

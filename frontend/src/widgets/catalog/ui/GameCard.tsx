@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import Image from "next/image";
+
 import { fileApi } from "shared/api/file";
 import { bindClasses } from "shared/lib/styles";
 import { useBlobUrl } from "shared/lib/useBlobUrl";
@@ -18,51 +19,38 @@ export default function GameCard({
   onOpen = () => {},
   imageBlobUrl = null,
 }: Props) {
-  const [imageUrl, setImageUrl] = useState(imageBlobUrl || null);
-  const [loading, setLoading] = useState(
-    Boolean(game.imageFileTitle && !imageBlobUrl),
-  );
-
   const { url, loading: blobLoading } = useBlobUrl(
     fileApi.getImageBlob,
     game.imageFileTitle,
   );
 
-  useEffect(() => {
-    if (imageBlobUrl) {
-      setImageUrl(imageBlobUrl);
-      setLoading(false);
-
-      return;
-    }
-
-    setImageUrl(url);
-    setLoading(Boolean(blobLoading));
-  }, [url, blobLoading, imageBlobUrl]);
+  const imageUrl = imageBlobUrl || url;
+  const loading = !imageBlobUrl && blobLoading;
 
   return (
-    <div
-      className={cx("tile-card")}
-      role="button"
-      tabIndex={0}
-      onClick={onOpen}
-      onKeyDown={(e) => e.key === "Enter" && onOpen()}
-    >
-      <div className={cx("tile-media")}>
-        {loading && <div className={cx("tile-empty")}>Загрузка...</div>}
+    <button type="button" className={cx("tile-card")} onClick={onOpen}>
+      <span className={cx("tile-media")}>
+        {loading && <span className={cx("tile-empty")}>Загрузка...</span>}
         {imageUrl ? (
-          <img src={imageUrl} alt={game.title} className={cx("tile-img")} />
+          <Image
+            unoptimized
+            width={512}
+            height={512}
+            src={imageUrl}
+            alt={game.title}
+            className={cx("tile-img")}
+          />
         ) : (
-          <div className={cx("tile-empty")}>Не удалось загрузить</div>
+          <span className={cx("tile-empty")}>Не удалось загрузить</span>
         )}
-        <div className={cx("tile-overlay")}>
-          <div className={cx("tile-desc")}>{game.description}</div>
-        </div>
-        <div className={cx("tile-title-strip")}>
-          <div className={cx("tile-title")}>{game.title}</div>
-        </div>
-      </div>
-    </div>
+        <span className={cx("tile-overlay")}>
+          <span className={cx("tile-desc")}>{game.description}</span>
+        </span>
+        <span className={cx("tile-title-strip")}>
+          <span className={cx("tile-title")}>{game.title}</span>
+        </span>
+      </span>
+    </button>
   );
 }
 const cx = bindClasses(style0);

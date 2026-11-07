@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { chatApi } from "entities/chat";
 import { gameApi } from "entities/game";
 import {
@@ -5,8 +7,6 @@ import {
   repeatedPasswordError,
   userApi,
 } from "entities/session";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { fileApi } from "shared/api/file";
 import { createObjectUrl, revokeObjectUrl } from "shared/lib/blobUtils";
 import { errorMessage } from "shared/lib/errors";
@@ -23,7 +23,6 @@ type GameOption = {
 };
 
 export function useProfile() {
-  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -93,7 +92,7 @@ export function useProfile() {
         }));
 
         setGames(games);
-      } catch (err) {
+      } catch {
         setGames([]);
       } finally {
         if (mounted) setGamesLoading(false);
@@ -170,7 +169,7 @@ export function useProfile() {
         );
 
         if (mounted) setChats(chats);
-      } catch (err) {
+      } catch {
         if (mounted) setChats([]);
       } finally {
         if (mounted) setChatsLoading(false);
@@ -200,10 +199,6 @@ export function useProfile() {
     setAvatarUploading(true);
     try {
       const refreshed = await userApi.updateImage(currentUser.id, {
-        email: currentUser.email ?? "",
-        login: currentUser.login ?? "",
-        password: "",
-        isAdmin: currentUser.isAdmin ?? false,
         imageFile: file,
       });
 
@@ -220,7 +215,7 @@ export function useProfile() {
         setAvatarErrorSet("Ошибка при изменении");
         refreshAvatar();
       }
-    } catch (err) {
+    } catch {
       revokeObjectUrl(localUrl);
       setAvatarPreviewUrl(null);
       setAvatarErrorSet("Ошибка при изменении");
@@ -240,19 +235,10 @@ export function useProfile() {
     setAvatarErrorSet("");
     try {
       const payload: UserImageInput = {
-        email: currentUser.email ?? "",
-        login: currentUser.login ?? "",
-        password: "",
-        isAdmin: currentUser.isAdmin ?? false,
         imageFile: null,
       };
 
-      try {
-        await userApi.updateImage(currentUser.id, payload);
-      } catch (err) {
-        payload.imageFile = new Blob();
-        await userApi.updateImage(currentUser.id, payload);
-      }
+      await userApi.updateImage(currentUser.id, payload);
 
       const refreshed = await userApi.getAuthenticated();
       if (mountedRef.current) {
@@ -260,7 +246,7 @@ export function useProfile() {
         setAvatarPreviewUrl(null);
         setAvatarErrorSet("");
       }
-    } catch (err) {
+    } catch {
       if (mountedRef.current) {
         setAvatarErrorSet("Ошибка при изменении");
       }
@@ -313,12 +299,6 @@ export function useProfile() {
     }
   };
 
-  const handleChatClick = (chat: ChatPreview) => {
-    if (!chat?.gameId || !chat?.id) return;
-
-    navigate(`/games/ai/${chat.gameId}/${chat.id}`);
-  };
-
   const avatarUrl = avatarPreviewUrl || avatarBlobUrl;
   const avatarLoading = avatarLoadingFetch || avatarUploading;
   const avatarErrorGetText =
@@ -357,6 +337,5 @@ export function useProfile() {
     setSelectedGame,
     chatsLoading,
     chats,
-    handleChatClick,
   };
 }

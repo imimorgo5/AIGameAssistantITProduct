@@ -10,7 +10,6 @@ interface Props {
   active?: boolean;
   onSelect: (session: Session) => void;
   onDelete: (id: string) => void;
-  loading?: boolean;
 }
 
 export default function ChatSidebarItem({
@@ -23,20 +22,20 @@ export default function ChatSidebarItem({
     session.lastUseTime || session.createdAt || new Date().toISOString();
 
   return (
-    <div
-      className={cx(`chat-session-item ${active ? "active" : ""}`)}
-      onClick={() => onSelect(session)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onSelect(session)}
-    >
-      <div className={cx("session-info")}>
+    <div className={cx(`chat-session-item ${active ? "active" : ""}`)}>
+      <button
+        type="button"
+        className={cx("session-info")}
+        onClick={() => onSelect(session)}
+        aria-pressed={Boolean(active)}
+      >
         <div className={cx("session-title")}>
           {session._loading ? "Загрузка…" : session.title}
         </div>
         <div className={cx("session-meta")}>{formatDate(time)}</div>
-      </div>
+      </button>
       <button
+        type="button"
         className={cx("chat-sidebar-icon-btn danger")}
         onClick={(ev) => {
           ev.stopPropagation();

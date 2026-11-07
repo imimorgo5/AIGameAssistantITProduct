@@ -7,6 +7,9 @@ const result = spawnSync(
   [
     path.join(eslintDirectory, "bin/eslint.js"),
     "src/**/*.{js,jsx,cjs,mjs,ts,tsx}",
+    "app/**/*.{ts,tsx}",
+    "tests/**/*.{ts,tsx,cjs}",
+    "*.ts",
     "scripts/**/*.{js,cjs,mjs}",
     "*.cjs",
     "--max-warnings",

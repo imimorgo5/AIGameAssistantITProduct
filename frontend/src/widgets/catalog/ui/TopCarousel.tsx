@@ -1,6 +1,6 @@
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import leftArrow from "shared/assets/left-arrow.svg";
-import rightArrow from "shared/assets/right-arrow.svg";
+
 import { useStableCallback } from "shared/lib/react";
 import { bindClasses } from "shared/lib/styles";
 
@@ -8,6 +8,9 @@ import GameCard from "./GameCard";
 import style0 from "./TopCarousel.module.scss";
 
 import type { Game } from "entities/game";
+
+const leftArrow = "/images/left-arrow.svg";
+const rightArrow = "/images/right-arrow.svg";
 
 interface Props {
   items?: Game[];
@@ -74,10 +77,6 @@ export default function TopCarousel({ items = [], onOpenGame }: Props) {
       window.removeEventListener("focus", handleVisible);
     };
   }, [visibleCount, items, length]);
-  useEffect(() => {
-    setBuffer(buildDisplay(index, visibleCount, items));
-    setTranslatePx(0);
-  }, [index, visibleCount, items]);
   useEffect(() => {
     if (!windowRef.current) return;
 
@@ -203,19 +202,20 @@ export default function TopCarousel({ items = [], onOpenGame }: Props) {
 
   return (
     <div className={cx("top-carousel")} ref={rootRef}>
-      <img
+      <button
+        type="button"
         className={cx("carousel-arrow")}
         onClick={() => go(-1)}
-        aria-label="Previous"
-        src={leftArrow}
-        alt="left"
-      />
+        aria-label="Предыдущие игры"
+      >
+        <Image unoptimized width={24} height={24} src={leftArrow} alt="" />
+      </button>
       <div className={cx("carousel-window")} ref={windowRef}>
         <div
           className={cx("carousel-track")}
           ref={trackRef}
           style={{
-            transform: `translate3d(${translatePx}px,0,0)`,
+            transform: `translate3d(${animating ? translatePx : 0}px,0,0)`,
             transition: animating
               ? `transform ${TRANS_MS}ms cubic-bezier(.2,.9,.2,1)`
               : "none",
@@ -237,13 +237,14 @@ export default function TopCarousel({ items = [], onOpenGame }: Props) {
           ))}
         </div>
       </div>
-      <img
+      <button
+        type="button"
         className={cx("carousel-arrow")}
         onClick={() => go(1)}
-        aria-label="Next"
-        src={rightArrow}
-        alt="right"
-      />
+        aria-label="Следующие игры"
+      >
+        <Image unoptimized width={24} height={24} src={rightArrow} alt="" />
+      </button>
 
       <div className={cx("carousel-indicators")}>
         {Array.from({
@@ -260,9 +261,10 @@ export default function TopCarousel({ items = [], onOpenGame }: Props) {
 }
 
 function useResponsiveCount() {
-  const [count, setCount] = useState(calc());
+  const [count, setCount] = useState(3);
   useEffect(() => {
     const onR = () => setCount(calc());
+    onR();
     window.addEventListener("resize", onR);
 
     return () => window.removeEventListener("resize", onR);

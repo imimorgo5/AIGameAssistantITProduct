@@ -1,24 +1,30 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
 import { useAuth } from "entities/session";
 import { authStyles as style0 } from "features/auth";
-import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "shared/assets/LOGO.svg";
-import { usePageTitle } from "shared/lib/page-title";
 import { bindClasses } from "shared/lib/styles";
 
 import style1 from "./VerifyEmailPages.module.scss";
-export default function VerifyEmailPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { confirmEmail } = useAuth();
-  const token = useMemo(() => {
-    return new URLSearchParams(location.search).get("token");
-  }, [location.search]);
 
+const logo = "/images/LOGO.svg";
+export default function VerifyEmailPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { confirmEmail } = useAuth();
+  const token = searchParams.get("token");
+
+  const verification = useRef<{ token: string; pending: Promise<void> } | null>(
+    null,
+  );
   const [status, setStatus] = useState("loading");
   useEffect(() => {
     if (!token) {
-      navigate("/login");
+      router.push("/login");
 
       return;
     }
@@ -26,7 +32,9 @@ export default function VerifyEmailPage() {
     let active = true;
     const verify = async () => {
       try {
-        await confirmEmail(token);
+        if (verification.current?.token !== token)
+          verification.current = { token, pending: confirmEmail(token) };
+        await verification.current.pending;
         if (active) setStatus("success");
       } catch {
         if (active) setStatus("error");
@@ -38,26 +46,31 @@ export default function VerifyEmailPage() {
     return () => {
       active = false;
     };
-  }, [token, confirmEmail, navigate]);
+  }, [token, confirmEmail, router]);
   useEffect(() => {
     if (status === "loading") return;
 
     const timer = setTimeout(
-      () => navigate(status === "success" ? "/" : "/login"),
+      () => router.push(status === "success" ? "/" : "/login"),
       2000,
     );
 
     return () => clearTimeout(timer);
-  }, [status, navigate]);
-  usePageTitle("Подтверждение почты");
+  }, [status, router]);
 
   return (
     <div className={cx("auth-root")}>
       <div className={cx("auth-bg")} role="presentation" aria-hidden="true" />
       <div className={cx("auth-top")}>
-        <Link to="/" className={cx("auth-logo-link")} aria-label="На главную">
+        <Link href="/" className={cx("auth-logo-link")} aria-label="На главную">
           <div className={cx("auth-logo")}>
-            <img src={logo} alt="AIGameAssistant" />
+            <Image
+              unoptimized
+              width={112}
+              height={42}
+              src={logo}
+              alt="AIGameAssistant"
+            />
           </div>
         </Link>
       </div>

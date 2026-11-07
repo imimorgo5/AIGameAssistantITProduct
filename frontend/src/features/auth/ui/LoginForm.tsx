@@ -1,6 +1,7 @@
-import { emailError, passwordError, useAuth } from "entities/session";
+import Link from "next/link";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+
+import { emailError, passwordError, useAuth } from "entities/session";
 import { errorMessage } from "shared/lib/errors";
 import { useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
@@ -17,7 +18,9 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   const passwordField = useBlurField(password, passwordError);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const isFormValid = Boolean(email && password && !emailError(email) && !passwordError(password));
+  const isFormValid = Boolean(
+    email && password && !emailError(email) && !passwordError(password),
+  );
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isFormValid || submitting) return;
@@ -29,7 +32,7 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         email,
         password,
       });
-      onSuccess && onSuccess();
+      onSuccess?.();
     } catch (err) {
       setError(
         errorMessage(
@@ -61,7 +64,11 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
             onBlur={emailField.onBlur}
             aria-invalid={!!emailField.error || !!error}
           />
-          {emailField.error && <div className={cx("field-error")} role="alert">{emailField.error}</div>}
+          {emailField.error && (
+            <div className={cx("field-error")} role="alert">
+              {emailField.error}
+            </div>
+          )}
         </div>
 
         <div className={cx("auth-form-row")}>
@@ -80,7 +87,11 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
             onBlur={passwordField.onBlur}
             aria-invalid={!!passwordField.error || !!error}
           />
-          {passwordField.error && <div className={cx("field-error")} role="alert">{passwordField.error}</div>}
+          {passwordField.error && (
+            <div className={cx("field-error")} role="alert">
+              {passwordField.error}
+            </div>
+          )}
         </div>
       </div>
 
@@ -101,13 +112,13 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         </button>
         <div className={cx("auth-footer")}>
           <div>
-            <Link to="/reset-password" className={cx("link")}>
+            <Link href="/reset-password" className={cx("link")}>
               Забыли пароль?
             </Link>
           </div>
           <div className={cx("auth-switch-link")}>
             <span>Нет аккаунта?</span>
-            <Link to="/register" className={cx("link")}>
+            <Link href="/register" className={cx("link")}>
               Зарегистрироваться
             </Link>
           </div>

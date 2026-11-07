@@ -18,7 +18,7 @@ class ConverterTest {
 
     private Converter converter() {
         FileServiceImpl files = mock(FileServiceImpl.class);
-        when(files.getUploadPath()).thenReturn(uploads);
+        when(files.resolveFile(anyString())).thenAnswer(invocation -> uploads.resolve((String) invocation.getArgument(0)));
         return new Converter(files);
     }
 

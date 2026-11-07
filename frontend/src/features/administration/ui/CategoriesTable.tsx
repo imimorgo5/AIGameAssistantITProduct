@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+
 import { errorMessage } from "shared/lib/errors";
 import { textError, useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
@@ -23,7 +24,9 @@ export default function CategoriesTable({
 }: Props) {
   const [page, setPage] = useState(1);
   const [newName, setNewName] = useState("");
-  const nameField = useBlurField(newName, (value) => textError(value, 100, false));
+  const nameField = useBlurField(newName, (value) =>
+    textError(value, 100, false),
+  );
   const [addError, setAddError] = useState("");
   const [adding, setAdding] = useState(false);
   const [deletingIds, setDeletingIds] = useState(new Set<number>());
@@ -32,10 +35,8 @@ export default function CategoriesTable({
     Math.ceil((categories.length || 0) / PAGE_SIZE),
   );
 
-  useEffect(() => {
-    setPage(1);
-  }, [categories]);
-  const start = (page - 1) * PAGE_SIZE;
+  const currentPage = Math.min(page, totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
   const pageSlice = useMemo(() => {
     return (categories || []).slice(start, start + PAGE_SIZE);
   }, [categories, start]);
@@ -97,8 +98,16 @@ export default function CategoriesTable({
             maxLength={100}
             aria-label="Новая категория"
           />
-          {nameField.error && <div className={cx("category-error")} role="alert">{nameField.error}</div>}
-          {addError && <div className={cx("category-error")} role="alert">{addError}</div>}
+          {nameField.error && (
+            <div className={cx("category-error")} role="alert">
+              {nameField.error}
+            </div>
+          )}
+          {addError && (
+            <div className={cx("category-error")} role="alert">
+              {addError}
+            </div>
+          )}
         </div>
         <button
           className={cx("btn admin-btn-add")}
@@ -146,7 +155,7 @@ export default function CategoriesTable({
             })}
             {pageSlice.length === 0 && (
               <tr>
-                <td colSpan={3} className={cx("static-3")}>
+                <td colSpan={4} className={cx("static-3")}>
                   Пусто
                 </td>
               </tr>
@@ -158,20 +167,20 @@ export default function CategoriesTable({
       <div className={cx("table-pagination")}>
         <button
           className={cx("btn pagination-btn")}
-          disabled={page <= 1 || totalPages <= 1}
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={currentPage <= 1 || totalPages <= 1}
+          onClick={() => setPage(Math.max(1, currentPage - 1))}
         >
           ←
         </button>
 
         <div className={cx("pagination-indicator")}>
-          {page} / {totalPages}
+          {currentPage} / {totalPages}
         </div>
 
         <button
           className={cx("btn pagination-btn")}
-          disabled={page >= totalPages || totalPages <= 1}
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={currentPage >= totalPages || totalPages <= 1}
+          onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
         >
           →
         </button>

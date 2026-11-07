@@ -1,3 +1,6 @@
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+
 import {
   authApi,
   emailError as validateEmailField,
@@ -5,18 +8,14 @@ import {
   repeatedPasswordError,
   validPassword,
 } from "entities/session";
-import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { errorMessage } from "shared/lib/errors";
 import { useBlurField } from "shared/lib/forms";
 
 import type React from "react";
 export function usePasswordReset() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const token = useMemo(() => {
-    return new URLSearchParams(location.search).get("token");
-  }, [location.search]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = searchParams.get("token");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,10 +35,13 @@ export function usePasswordReset() {
   useEffect(() => {
     if (!success && !(error && token)) return;
 
-    const timeout = setTimeout(() => navigate("/login"), token ? 2000 : 3000);
+    const timeout = setTimeout(
+      () => router.push("/login"),
+      token ? 2000 : 3000,
+    );
 
     return () => clearTimeout(timeout);
-  }, [success, error, token, navigate]);
+  }, [success, error, token, router]);
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setEmail(e.target.value);
 

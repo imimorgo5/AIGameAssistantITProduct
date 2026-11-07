@@ -1,1 +1,1 @@
-export { escapeText, formatDate, validateEmail } from "./utils";
+export { formatDate, originalFileName, validateEmail } from "./utils";

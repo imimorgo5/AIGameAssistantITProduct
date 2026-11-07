@@ -52,9 +52,31 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ResponseDTO(ex.getMessage()));
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ResponseDTO> handleValidation(Exception ex) {
+        return ResponseEntity.badRequest().body(new ResponseDTO("Проверьте заполнение полей"));
+    }
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ResponseDTO> handleStatus(org.springframework.web.server.ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(new ResponseDTO(ex.getReason()));
+    }
+
+    @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class,
+            org.springframework.web.bind.MissingServletRequestParameterException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ResponseDTO> handleMalformedRequest(Exception ex) {
+        return ResponseEntity.badRequest().body(new ResponseDTO("Некорректный запрос"));
+    }
+
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ResponseDTO> handleOversizedUpload(Exception ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(new ResponseDTO("Файл слишком большой"));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseDTO> handleException(Exception ex) {
         logger.error("Exception: {}", ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDTO(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDTO("Внутренняя ошибка сервера. Попробуйте ещё раз."));
     }
 }

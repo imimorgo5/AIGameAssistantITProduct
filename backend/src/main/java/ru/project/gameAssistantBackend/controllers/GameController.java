@@ -37,7 +37,7 @@ public class GameController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public GameResponseDTO create(@ModelAttribute GameRequestDTO gameRequestDTO)
+    public GameResponseDTO create(@jakarta.validation.Valid @ModelAttribute GameRequestDTO gameRequestDTO)
             throws CategoryNotFoundException {
         Game game = gameServiceImpl.create(gameRequestDTO);
         return gameMapper.mapToGameResponseDTO(game);
@@ -80,7 +80,7 @@ public class GameController {
     @PatchMapping(value = "/{gameId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public GameResponseDTO update(
             @PathVariable("gameId") Long gameId,
-            @ModelAttribute GameRequestDTO gameDTO)
+            @jakarta.validation.Valid @ModelAttribute GameRequestDTO gameDTO)
             throws GameNotFoundException, CategoryNotFoundException {
         Game game = gameServiceImpl.update(gameId, gameDTO);
         return gameMapper.mapToGameResponseDTO(game);

@@ -18,13 +18,23 @@ function form(input: GameInput): FormData {
 
 export const gameApi = {
   create: (input: GameInput) =>
-    mutate("post", "/api/games", form(input), parseGame, ["games", "favourites", "files"]),
+    mutate("post", "/api/games", form(input), parseGame, [
+      "games",
+      "favourites",
+      "files",
+    ]),
   read: (id: Id) =>
     read(`/api/games/${encodeURIComponent(id)}`, parseGame, {}, 60000, [
       "games",
     ]),
   update: (id: Id, input: GameInput) =>
-    mutate("patch", `/api/games/${encodeURIComponent(id)}`, form(input), parseGame, ["games", "favourites", "files"]),
+    mutate(
+      "patch",
+      `/api/games/${encodeURIComponent(id)}`,
+      form(input),
+      parseGame,
+      ["games", "favourites", "files"],
+    ),
   delete: (id: Id) =>
     mutate(
       "delete",

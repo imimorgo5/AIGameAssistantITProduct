@@ -674,14 +674,32 @@
 }
 
 @media (max-width: 599px) {
-  .chat-root { height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .chat-root {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
-  .chat-page-switch-container { flex: 0 0 40px; }
+  .chat-page-switch-container {
+    flex: 0 0 40px;
+  }
 
-  .chat-container { flex: 1; min-height: 0; margin-bottom: 10px; }
+  .chat-container {
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 10px;
+  }
 
-  .chat-main, .chat-main-inner { height: 100%; min-height: 0; }
+  .chat-main,
+  .chat-main-inner {
+    height: 100%;
+    min-height: 0;
+  }
 
-  .chat-dialog-container { height: 100%; min-height: 0; }
+  .chat-dialog-container {
+    height: 100%;
+    min-height: 0;
+  }
 }
-

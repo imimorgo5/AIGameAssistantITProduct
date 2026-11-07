@@ -25,6 +25,13 @@
 }
 
 .session-info {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
   min-width: 0;
   overflow: hidden;
   display: flex;

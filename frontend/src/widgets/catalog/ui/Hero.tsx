@@ -16,7 +16,7 @@ export default function Hero({ topGames = [], onOpenGame }: Props) {
       <div className={cx("hero-bg")} />
       <div className={cx("hero-inner")}>
         <div className={cx("hero-left")}>
-          <h2 className={cx("hero-title")}>ПРОВЕДИТЕ ВЕЧЕР С КОМФОРТОМ</h2>
+          <h1 className={cx("hero-title")}>ПРОВЕДИТЕ ВЕЧЕР С КОМФОРТОМ</h1>
         </div>
         <div className={cx("hero-right")}>
           <div className={cx("top-label")}>ТОП-10</div>

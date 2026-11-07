@@ -1,38 +1,48 @@
-import { authStyles as style0, LoginForm, RegisterForm } from "features/auth";
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "shared/assets/LOGO.svg";
-import { usePageTitle } from "shared/lib/page-title";
+
+import { authStyles as style0, LoginForm, RegisterForm } from "features/auth";
 import { bindClasses } from "shared/lib/styles";
 import { ToggleSlider } from "shared/ui/toggle-slider";
+
+const logo = "/images/LOGO.svg";
 export default function AuthPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const [afterRegister, setAfterRegister] = useState(false);
-  const mode = location.pathname === "/register" ? "register" : "login";
+  const mode = pathname === "/register" ? "register" : "login";
   useEffect(() => {
     if (!afterRegister) return;
 
     const timer = setTimeout(() => {
-      navigate("/login");
+      router.push("/login");
       setAfterRegister(false);
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [afterRegister, navigate]);
+  }, [afterRegister, router]);
   const switchMode = (login: boolean) =>
-    navigate(login ? "/login" : "/register");
+    router.push(login ? "/login" : "/register");
 
   const handleRegister = () => setAfterRegister(true);
-  usePageTitle(mode === "login" ? "Вход" : "Регистрация");
 
   return (
     <div className={cx("auth-root")}>
       <div className={cx("auth-bg")} role="presentation" aria-hidden="true" />
       <div className={cx("auth-top")}>
-        <Link to="/" className={cx("auth-logo-link")} aria-label="На главную">
+        <Link href="/" className={cx("auth-logo-link")} aria-label="На главную">
           <div className={cx("auth-logo")}>
-            <img src={logo} alt="AIGameAssistant" />
+            <Image
+              unoptimized
+              width={112}
+              height={42}
+              src={logo}
+              alt="AIGameAssistant"
+            />
           </div>
         </Link>
       </div>
@@ -61,7 +71,7 @@ export default function AuthPage() {
             >
               {!afterRegister ? (
                 mode === "login" ? (
-                  <LoginForm onSuccess={() => navigate("/")} />
+                  <LoginForm onSuccess={() => router.push("/")} />
                 ) : (
                   <RegisterForm onSuccess={handleRegister} />
                 )

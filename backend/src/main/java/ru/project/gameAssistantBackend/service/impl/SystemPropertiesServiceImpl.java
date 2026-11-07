@@ -34,6 +34,7 @@ public class SystemPropertiesServiceImpl implements SystemPropertiesService {
     @Override
     public SystemProperties updatePrompt(SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
         SystemProperties systemProperties = getSystemProperties();
+        if (systemPropertiesDTO.prompt() == null || systemPropertiesDTO.prompt().isBlank()) throw new IllegalArgumentException("Системный промпт не может быть пустым");
         systemProperties.setPrompt(systemPropertiesDTO.prompt());
         return systemPropertiesRepository.save(systemProperties);
     }

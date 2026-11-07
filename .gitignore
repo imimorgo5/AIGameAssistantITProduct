@@ -49,3 +49,8 @@ Thumbs.db
 
 # Keep the Gradle wrapper: it is required to build a fresh checkout.
 !backend/gradle/wrapper/gradle-wrapper.jar
+
+# Next.js and browser-test outputs
+**/.next/
+**/playwright-report/
+**/test-results/

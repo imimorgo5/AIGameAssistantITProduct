@@ -1,4 +1,6 @@
+import Image from "next/image";
 import { useRef, useState } from "react";
+
 import { fileError } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
 
@@ -59,7 +61,14 @@ export default function AvatarControl({
         ) : errorSet ? (
           <div className={cx("avatar-error")}>{errorSet}</div>
         ) : preview ? (
-          <img src={preview} alt="Аватар" className={cx("avatar-img")} />
+          <Image
+            unoptimized
+            width={512}
+            height={512}
+            src={preview}
+            alt="Аватар"
+            className={cx("avatar-img")}
+          />
         ) : (
           <div className={cx("avatar-placeholder")}>Нет фото</div>
         )}
@@ -150,7 +159,11 @@ export default function AvatarControl({
         </div>
       </div>
 
-      {selectionError && <p className={cx("avatar-input-error")} role="alert">{selectionError}</p>}
+      {selectionError && (
+        <p className={cx("avatar-input-error")} role="alert">
+          {selectionError}
+        </p>
+      )}
       <input
         ref={inputRef}
         type="file"

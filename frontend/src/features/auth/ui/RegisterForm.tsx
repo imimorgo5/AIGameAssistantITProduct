@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { useState } from "react";
+
 import {
   emailError as validateEmailField,
   loginError as validateLoginField,
@@ -6,8 +9,6 @@ import {
   useAuth,
   validPassword,
 } from "entities/session";
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import { errorMessage } from "shared/lib/errors";
 import { useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
@@ -49,11 +50,11 @@ export default function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
 
   const isFormValid = Boolean(
     email &&
-      userLogin &&
-      !validateLoginField(userLogin) &&
-      validPassword(password) &&
-      passwordAgain === password &&
-      !validateEmailField(email),
+    userLogin &&
+    !validateLoginField(userLogin) &&
+    validPassword(password) &&
+    passwordAgain === password &&
+    !validateEmailField(email),
   );
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -68,7 +69,7 @@ export default function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
         login: userLogin,
         password,
       });
-      onSuccess && onSuccess();
+      onSuccess?.();
     } catch (regErr) {
       setError(
         errorMessage(
@@ -217,7 +218,7 @@ export default function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
         <div className={cx("auth-footer")}>
           <div className={cx("auth-switch-link")}>
             <span>Есть аккаунт?</span>
-            <Link to="/login" className={cx("link")}>
+            <Link href="/login" className={cx("link")}>
               Войти
             </Link>
           </div>

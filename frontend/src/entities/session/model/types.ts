@@ -21,8 +21,7 @@ export interface Credentials {
 export interface Registration extends Credentials {
   login: string;
 }
-export interface UserImageInput extends Registration {
-  isAdmin: boolean;
+export interface UserImageInput {
   imageFile?: Blob | null;
 }
 export function parseUser(value: unknown): User {

@@ -50,6 +50,7 @@ public class CategoryService {
 
     @Transactional
     public void delete(Category category) {
+        for (var game : Set.copyOf(category.getGames())) game.getCategories().remove(category);
         categoryRepository.delete(category);
     }
 

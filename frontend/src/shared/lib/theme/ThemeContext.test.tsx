@@ -14,7 +14,11 @@ test("applies theme transitions for 500 milliseconds", () => {
   localStorage.clear();
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
-    value: jest.fn(() => ({ matches: true, addEventListener: jest.fn(), removeEventListener: jest.fn() })),
+    value: jest.fn(() => ({
+      matches: true,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    })),
   });
   const { unmount } = render(
     <ThemeProvider>

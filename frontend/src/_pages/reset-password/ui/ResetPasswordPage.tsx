@@ -1,10 +1,14 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+
 import { authStyles as style0 } from "features/auth";
-import { Link } from "react-router-dom";
-import logo from "shared/assets/LOGO.svg";
-import { usePageTitle } from "shared/lib/page-title";
 import { bindClasses } from "shared/lib/styles";
 
 import { usePasswordReset } from "../model/usePasswordReset";
+
+const logo = "/images/LOGO.svg";
 export default function ResetPasswordPage() {
   const {
     success,
@@ -28,15 +32,19 @@ export default function ResetPasswordPage() {
     isPasswordFormValid,
   } = usePasswordReset();
 
-  usePageTitle(token ? "Новый пароль" : "Восстановление пароля");
-
   return (
     <div className={cx("auth-root reset-password-page")}>
       <div className={cx("auth-bg")} role="presentation" aria-hidden="true" />
       <div className={cx("auth-top")}>
-        <Link to="/" className={cx("auth-logo-link")} aria-label="На главную">
+        <Link href="/" className={cx("auth-logo-link")} aria-label="На главную">
           <div className={cx("auth-logo")}>
-            <img src={logo} alt="AIGameAssistant" />
+            <Image
+              unoptimized
+              width={112}
+              height={42}
+              src={logo}
+              alt="AIGameAssistant"
+            />
           </div>
         </Link>
       </div>
@@ -147,7 +155,7 @@ export default function ResetPasswordPage() {
                       <div className={cx("auth-footer")}>
                         <div className={cx("auth-switch-link")}>
                           <span>Нет аккаунта?</span>
-                          <Link to="/register" className={cx("link")}>
+                          <Link href="/register" className={cx("link")}>
                             Зарегистрироваться
                           </Link>
                         </div>

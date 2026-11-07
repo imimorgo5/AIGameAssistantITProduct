@@ -1,5 +1,8 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+
 import { bindClasses } from "shared/lib/styles";
 
 import styles from "./Modal.module.scss";

@@ -1,5 +1,6 @@
-import { modelApi } from "entities/ai";
 import { useEffect, useState } from "react";
+
+import { modelApi } from "entities/ai";
 import { SelectDropdown } from "shared/ui/select-dropdown";
 
 import type { AIModel } from "entities/ai";

@@ -2,10 +2,13 @@ import { Component } from "react";
 
 import type { ReactNode } from "react";
 
-export default class PdfErrorBoundary extends Component<{
-  children: ReactNode;
-  fallback: ReactNode;
-}, { failed: boolean }> {
+export default class PdfErrorBoundary extends Component<
+  {
+    children: ReactNode;
+    fallback: ReactNode;
+  },
+  { failed: boolean }
+> {
   override state = { failed: false };
 
   static getDerivedStateFromError() {

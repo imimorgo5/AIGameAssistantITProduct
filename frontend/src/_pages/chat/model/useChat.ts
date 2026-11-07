@@ -1,12 +1,13 @@
+import { useRouter, useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
 import { modelApi } from "entities/ai";
 import { chatApi } from "entities/chat";
 import { gameApi } from "entities/game";
 import { userApi } from "entities/session";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { errorMessage } from "shared/lib/errors";
 import { textError, useBlurField } from "shared/lib/forms";
-import { useStableCallback } from "shared/lib/react";
+import { useMediaQuery, useStableCallback } from "shared/lib/react";
 
 import type { Message, Session } from "entities/chat";
 import type { Game } from "entities/game";
@@ -84,10 +85,10 @@ function groupSessionsByTime(sessions: Session[]): [string, Session[]][] {
 }
 
 export function useChat() {
-  const navigate = useNavigate();
-  const params = useParams();
-  const routeGameId = params.gameId;
-  const routeChatId = params.chatId;
+  const router = useRouter();
+  const params = useParams<{ segments?: string[] }>();
+  const routeGameId = params.segments?.[0];
+  const routeChatId = params.segments?.[1];
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(true);
@@ -104,11 +105,13 @@ export function useChat() {
   const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const inputField = useBlurField(input, (value) => textError(value, 10000, false));
-  const [sending, setSending] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(
-    typeof window !== "undefined" ? window.innerWidth >= 900 : false,
+  const inputField = useBlurField(input, (value) =>
+    textError(value, 10000, false),
   );
+  const [sending, setSending] = useState(false);
+  const desktop = useMediaQuery("(min-width: 900px)");
+  const [sidebarOverride, setSidebarOpen] = useState<boolean | null>(null);
+  const sidebarOpen = sidebarOverride ?? desktop;
 
   const [rulesSidebarOpen, setRulesSidebarOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -134,15 +137,16 @@ export function useChat() {
     text?: string;
     onConfirm?: () => Promise<void>;
   }>({
-        open: false,
-        text: "",
-      });
+    open: false,
+    text: "",
+  });
 
   const sessionRequest = useRef(0);
   const refreshAllSessions = useStableCallback(
     async (useGame: Game | null = game, isLoadMore = false) => {
       const requestId = ++sessionRequest.current;
-      isLoadMore ? setLoadingMore(true) : setChatsLoading(true);
+      if (isLoadMore) setLoadingMore(true);
+      else setChatsLoading(true);
       let mapped: Session[] = [];
       try {
         if (!useGame || !useGame.id) {
@@ -173,12 +177,13 @@ export function useChat() {
 
         setAbsoluteCount(previews?.totalElements || 0);
         setError(null);
-      } catch (err) {
+      } catch {
         mapped = [];
         setError("Ошибка при загрузке чатов");
       } finally {
         if (mounted.current && requestId === sessionRequest.current) {
-          isLoadMore ? setLoadingMore(false) : setChatsLoading(false);
+          if (isLoadMore) setLoadingMore(false);
+          else setChatsLoading(false);
           setSessions(mapped);
         }
       }
@@ -216,7 +221,6 @@ export function useChat() {
     }, 0);
   }, [input]);
   useEffect(() => {
-    setLoading(true);
     let mounted = true;
     (async () => {
       try {
@@ -230,7 +234,7 @@ export function useChat() {
           const userModel = await modelApi.getMain();
           setSelectedModel(userModel || null);
         }
-      } catch (err) {
+      } catch {
         setError("Ошибка при получении данных пользователя");
         if (!mounted) return;
 
@@ -246,7 +250,6 @@ export function useChat() {
     };
   }, []);
   useEffect(() => {
-    setGameLoading(true);
     let mounted = true;
     (async () => {
       if (!routeGameId) {
@@ -261,7 +264,7 @@ export function useChat() {
 
         setGame(g || null);
         setError(null);
-      } catch (err) {
+      } catch {
         setError("Ошибка при загрузке чатов");
         if (mounted) setGame(null);
       } finally {
@@ -288,7 +291,7 @@ export function useChat() {
     async (session: Session, { navigateToRoute = true } = {}) => {
       setActiveSession(session);
       if (navigateToRoute) {
-        navigate(`/games/ai/${game?.id}/${session.id}`);
+        router.push(`/games/ai/${game?.id}/${session.id}`);
       }
 
       setChatError(null);
@@ -338,7 +341,7 @@ export function useChat() {
             }),
           40,
         );
-      } catch (err) {
+      } catch {
         if (!mounted.current || thisFetchId !== fetchIdRef.current) return;
 
         setChatError("Ошибка при загрузке чата");
@@ -364,8 +367,8 @@ export function useChat() {
           const next = sessions.filter((s) => s.id !== sessionId);
           setSessions(next);
           if (String(activeSession?.id) === String(sessionId)) {
-            if (game && game?.id) navigate(`/games/ai/${game?.id}`);
-            else navigate("/games/ai");
+            if (game && game?.id) router.push(`/games/ai/${game?.id}`);
+            else router.push("/games/ai");
 
             setActiveSession(null);
             setMessages([]);
@@ -437,14 +440,14 @@ export function useChat() {
         previous.map((message) =>
           message.id === streamId
             ? {
-              ...message,
-              role: "error",
-              text: errorMessage(
-                cause,
-                "Ошибка при получении ответа от сервера.",
-              ),
-              _streaming: false,
-            }
+                ...message,
+                role: "error",
+                text: errorMessage(
+                  cause,
+                  "Ошибка при получении ответа от сервера.",
+                ),
+                _streaming: false,
+              }
             : message,
         ),
       );
@@ -456,9 +459,9 @@ export function useChat() {
       const chat = activeSession
         ? await chatApi.continueChat(activeSession.id, text, selectedModel)
         : await chatApi.startChat({
-          gameId: game.id,
-          request: text,
-        });
+            gameId: game.id,
+            request: text,
+          });
 
       if (!mounted.current) return;
 
@@ -482,9 +485,9 @@ export function useChat() {
             previous.map((message) =>
               message.id === streamId
                 ? {
-                  ...message,
-                  text: message.text + chunk,
-                }
+                    ...message,
+                    text: message.text + chunk,
+                  }
                 : message,
             ),
           );
@@ -497,9 +500,9 @@ export function useChat() {
             previous.map((message) =>
               message.id === streamId
                 ? {
-                  ...message,
-                  _streaming: false,
-                }
+                    ...message,
+                    _streaming: false,
+                  }
                 : message,
             ),
           );
@@ -514,9 +517,7 @@ export function useChat() {
         controller,
         streamId,
       };
-      navigate(`/games/ai/${game.id}/${session.id}`, {
-        replace: true,
-      });
+      router.replace(`/games/ai/${game.id}/${session.id}`);
     } catch (cause) {
       fail(cause);
     }
@@ -532,7 +533,7 @@ export function useChat() {
   const handleSidebarSelect = (session: Session) => {
     if (sending) return;
 
-    navigate(`/games/ai/${game?.id}/${session.id}`);
+    router.push(`/games/ai/${game?.id}/${session.id}`);
     if (window.innerWidth < 900) setSidebarOpen(false);
   };
 
@@ -547,7 +548,7 @@ export function useChat() {
     inputField.reset();
     setChatError(null);
     setChatLoading(false);
-    navigate(`/games/ai/${game.id}`);
+    router.push(`/games/ai/${game.id}`);
     if (window.innerWidth < 900) setSidebarOpen(false);
 
     inputRef.current?.focus();
@@ -579,9 +580,6 @@ export function useChat() {
 
     if (!routeChatId) {
       closeActiveStream();
-      setActiveSession(null);
-      setMessages([]);
-
       return;
     }
 
@@ -605,6 +603,15 @@ export function useChat() {
     selectSession,
     closeActiveStream,
   ]);
+  const [previousChatId, setPreviousChatId] = useState(routeChatId);
+  if (previousChatId !== routeChatId) {
+    setPreviousChatId(routeChatId);
+    if (!routeChatId && !sending) {
+      setActiveSession(null);
+      setMessages([]);
+      setChatError(null);
+    }
+  }
   const grouped = groupSessionsByTime(sessions);
 
   return {
@@ -632,7 +639,7 @@ export function useChat() {
     loadingMore,
     setVisibleCount,
     routeGameId,
-    navigate,
+    router,
     chatError,
     chatLoading,
     messages,

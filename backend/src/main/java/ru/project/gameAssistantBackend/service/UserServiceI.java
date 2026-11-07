@@ -18,7 +18,7 @@ public interface UserServiceI {
 
     User updateImage(User user, MultipartFile imageFile);
 
-    void updateRole(Long id) throws UserNotFoundException;
+    void updateRole(Long id, ru.project.gameAssistantBackend.models.Role role) throws UserNotFoundException;
 
     void deleteUser(Long userId) throws UserNotFoundException;
 }

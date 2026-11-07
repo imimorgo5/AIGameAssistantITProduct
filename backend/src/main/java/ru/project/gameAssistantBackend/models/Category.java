@@ -21,6 +21,8 @@ public class Category extends BaseEntity{
 
     public Category() {}
 
+    public Set<Game> getGames() { return games; }
+
     public String getName() {
         return name;
     }

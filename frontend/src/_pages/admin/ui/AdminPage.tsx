@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+
 import {
   adminStyles as style0,
   adminTableStyles as style1,
@@ -8,8 +12,6 @@ import {
   UsersTable,
 } from "features/administration";
 import { ModelSelect } from "features/model-select";
-import { Link } from "react-router-dom";
-import { usePageTitle } from "shared/lib/page-title";
 import { bindClasses } from "shared/lib/styles";
 import { FileViewer } from "shared/ui/file-viewer";
 import { Modal, ModalActions } from "shared/ui/modal";
@@ -55,9 +57,6 @@ export default function AdminPage() {
     setViewerState,
   } = useAdmin();
 
-  usePageTitle(
-    `Администрирование — ${activeTab === "users" ? "Пользователи" : activeTab === "games" ? "Игры" : "Настройки"}`,
-  );
   if (loading) {
     return (
       <div className={cx("admin-root")}>
@@ -76,7 +75,7 @@ export default function AdminPage() {
       <div className={cx("admin-root")}>
         <div className={cx("admin-header")}>
           <h1>Админская панель</h1>
-          <Link to="/" className={cx("main-link")}>
+          <Link href="/" className={cx("main-link")}>
             На главную
           </Link>
         </div>
@@ -132,7 +131,7 @@ export default function AdminPage() {
         </div>
 
         <div className={cx("admin-header-right")}>
-          <Link to="/" className={cx("link main-link")}>
+          <Link href="/" className={cx("link main-link")}>
             На главную
           </Link>
           <button className={cx("btn admin-btn-logout")} onClick={logout}>
@@ -322,7 +321,9 @@ export default function AdminPage() {
           <FileViewer
             fileType={viewerState.fileType ?? "pdf"}
             fileTitle={viewerState.fileTitle ?? ""}
-            onClose={() => setViewerState({ open: false, fileType: null, fileTitle: null })}
+            onClose={() =>
+              setViewerState({ open: false, fileType: null, fileTitle: null })
+            }
           />
         </Modal>
       )}

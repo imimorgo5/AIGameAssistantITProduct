@@ -1,8 +1,13 @@
+"use client";
+
+import Image from "next/image";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+
 import { fileApi } from "shared/api/file";
 import { downloadBlob } from "shared/lib/blobUtils";
 import { bindClasses } from "shared/lib/styles";
 import { useBlobUrl } from "shared/lib/useBlobUrl";
+import { originalFileName } from "shared/lib/utils";
 
 import styles from "./FileViewer.module.scss";
 import PdfErrorBoundary from "./PdfErrorBoundary";
@@ -19,16 +24,35 @@ interface Props {
 }
 
 export default function FileViewer(props: Props) {
-  return <FileViewerContent key={`${props.fileType}:${props.fileTitle}`} {...props} />;
+  return (
+    <FileViewerContent
+      key={`${props.fileType}:${props.fileTitle}`}
+      {...props}
+    />
+  );
 }
 
-function FileViewerContent({ fileType, fileTitle, title, onClose, closeIcon, closeButtonClassName }: Props) {
+function FileViewerContent({
+  fileType,
+  fileTitle,
+  title,
+  onClose,
+  closeIcon,
+  closeButtonClassName,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderWidth, setRenderWidth] = useState(600);
   const [pdfFailed, setPdfFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [PdfViewer, setPdfViewer] = useState(() => lazy(() => import("./PdfViewer")));
-  const { url: fileUrl, loading, error, refresh } = useBlobUrl(
+  const [PdfViewer, setPdfViewer] = useState(() =>
+    lazy(() => import("./PdfViewer")),
+  );
+  const {
+    url: fileUrl,
+    loading,
+    error,
+    refresh,
+  } = useBlobUrl(
     fileType === "pdf" ? fileApi.getRulesBlob : fileApi.getImageBlob,
     fileTitle,
   );
@@ -37,7 +61,8 @@ function FileViewerContent({ fileType, fileTitle, title, onClose, closeIcon, clo
     const container = containerRef.current;
     if (!container) return;
 
-    const measure = () => setRenderWidth(Math.max(1, Math.floor(container.clientWidth)));
+    const measure = () =>
+      setRenderWidth(Math.max(1, Math.floor(container.clientWidth)));
     measure();
     if (typeof ResizeObserver === "undefined") {
       window.addEventListener("resize", measure);
@@ -53,7 +78,10 @@ function FileViewerContent({ fileType, fileTitle, title, onClose, closeIcon, clo
 
   const fallback = (
     <div className={cx("fv-message")}>
-      <p role="alert">Не удалось показать PDF внутри приложения. Откройте файл в браузере или скачайте его.</p>
+      <p role="alert">
+        Не удалось показать PDF внутри приложения. Откройте файл в браузере или
+        скачайте его.
+      </p>
       <button
         type="button"
         className={cx("pdf-button")}
@@ -62,7 +90,8 @@ function FileViewerContent({ fileType, fileTitle, title, onClose, closeIcon, clo
           setAttempt((value) => value + 1);
           setPdfViewer(() => lazy(() => import("./PdfViewer")));
         }}
-      >Повторить просмотр
+      >
+        Повторить просмотр
       </button>
     </div>
   );
@@ -72,13 +101,21 @@ function FileViewerContent({ fileType, fileTitle, title, onClose, closeIcon, clo
       <div className={cx("file-viewer-header")}>
         <div className={cx("file-viewer-leading")}>
           {onClose && (
-            <button type="button" className={closeButtonClassName ?? cx("pdf-button file-viewer-close")} onClick={onClose} aria-label="Закрыть просмотрщик" title="Закрыть просмотрщик">
+            <button
+              type="button"
+              className={
+                closeButtonClassName ?? cx("pdf-button file-viewer-close")
+              }
+              onClick={onClose}
+              aria-label="Закрыть просмотрщик"
+              title="Закрыть просмотрщик"
+            >
               {closeIcon ?? "×"}
             </button>
           )}
         </div>
         <h2 className={cx("file-viewer-title")} title={title || fileTitle}>
-          {title || fileTitle.replace(/^\d{13}[_-]?/, "") || "Правила игры"}
+          {title || originalFileName(fileTitle) || "Правила игры"}
         </h2>
         <div className={cx("file-viewer-actions")}>
           {fileType === "pdf" && fileUrl && !loading && (
@@ -102,29 +139,51 @@ function FileViewerContent({ fileType, fileTitle, title, onClose, closeIcon, clo
         </div>
       </div>
       <div className={cx("file-viewer-body")} ref={containerRef}>
-        {!fileTitle && <div className={cx("fv-message")}>Файл пока не добавлен.</div>}
+        {!fileTitle && (
+          <div className={cx("fv-message")}>Файл пока не добавлен.</div>
+        )}
         {loading && (
-          <div className={cx("fv-center")} role="status">Загрузка файла…</div>
+          <div className={cx("fv-center")} role="status">
+            Загрузка файла…
+          </div>
         )}
         {error && (
           <div className={cx("fv-message")}>
-            <p className={cx("fv-error")} role="alert">{error}</p>
-            <button type="button" className={cx("pdf-button")} onClick={refresh}>
+            <p className={cx("fv-error")} role="alert">
+              {error}
+            </p>
+            <button
+              type="button"
+              className={cx("pdf-button")}
+              onClick={refresh}
+            >
               Повторить загрузку
             </button>
           </div>
         )}
         {!loading && !error && fileType === "image" && fileUrl && (
           <div className={cx("fv-image-wrap")}>
-            <img className={cx("fv-image")} src={fileUrl} alt={fileTitle} />
+            <Image
+              unoptimized
+              width={512}
+              height={512}
+              className={cx("fv-image")}
+              src={fileUrl}
+              alt={fileTitle}
+            />
           </div>
         )}
         {!loading && !error && fileType === "pdf" && fileUrl && (
           <PdfErrorBoundary key={`${fileUrl}:${attempt}`} fallback={fallback}>
-            {pdfFailed ? fallback : (
-              <Suspense fallback={
-                <div className={cx("fv-center")} role="status">Загрузка просмотрщика…</div>
-              }
+            {pdfFailed ? (
+              fallback
+            ) : (
+              <Suspense
+                fallback={
+                  <div className={cx("fv-center")} role="status">
+                    Загрузка просмотрщика…
+                  </div>
+                }
               >
                 <PdfViewer
                   key={fileUrl}

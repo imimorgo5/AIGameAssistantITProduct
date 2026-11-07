@@ -22,7 +22,7 @@ public class Converter {
         if (fileName == null || !fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
             throw new IllegalArgumentException("Загрузите правила в формате PDF");
         }
-        Path pdf = fileService.getUploadPath().resolve(fileName);
+        Path pdf = fileService.resolveFile(fileName);
         Path markdown = pdf.resolveSibling(fileName.substring(0, fileName.length() - 4) + ".md");
         try (PDDocument document = PDDocument.load(pdf.toFile())) {
             PDFTextStripper stripper = new PDFTextStripper();

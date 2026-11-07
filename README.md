@@ -1,50 +1,87 @@
 # AIGameAssistant
 
-ИИ-ассистент для настольных игр. Помогает разбираться в правилах и спорных ситуациях: выберите игру, откройте PDF-правила и задайте вопрос в чате. Доступны поиск, категории, избранное, история диалогов и выбор ИИ-модели. Администраторы управляют играми, пользователями и настройками ассистента.
+ИИ-ассистент для настольных игр. Каталог с поиском, категориями и избранным, просмотр PDF-правил, история диалогов и потоковые ответы ИИ. Администратор управляет играми, пользователями и настройками ассистента.
 
-Стек: React и TypeScript, Java 21 и Spring Boot, PostgreSQL. Приложение запускается через Docker Compose.
+## Стек
+
+- Frontend: Next.js 16 App Router, React 19, TypeScript, FSD, SCSS Modules.
+- Backend: Java 21, Spring Boot 3.5, PostgreSQL, Liquibase.
+- ИИ: OpenRouter. Локальная почта: Mailpit.
+- Проверки: ESLint, Stylelint, Prettier, Jest и Playwright.
+- Запуск: Docker Compose.
 
 ## Запуск
 
-Установите Docker с Compose v2. В корне проекта создайте `.env` из примера:
+Нужны Docker и Compose v2. В корне проекта:
 
 ```bash
 cp .env.example .env
 ```
 
-Заполните в `.env`:
-
-| Поле | Значение |
-| --- | --- |
-| `POSTGRES_PASSWORD` | Пароль базы данных |
-| `JWT_SECRET_ACCESS` | Случайный секрет access-токенов |
-| `JWT_SECRET_REFRESH` | Другой случайный секрет refresh-токенов |
-| `ADMIN_EMAIL` | Email первого администратора для входа |
-| `ADMIN_LOGIN` | Логин первого администратора |
-| `ADMIN_PASSWORD` | Пароль первого администратора |
-| `OPENROUTER_API_KEY` | Ключ OpenRouter для ответов ИИ |
-
-Для генерации пароля базы можно использовать `openssl rand -hex 32`. Для каждого JWT-секрета отдельно выполните `openssl rand -base64 64` и вставьте результат в соответствующее поле. Пароль администратора задайте самостоятельно. Администратор создаётся при первом запуске; изменение этих полей не обновляет уже созданную учётную запись.
-
-Для локального запуска остальные значения можно оставить как в примере: `APP_PORT=80`, `APP_PUBLIC_URL=http://localhost`, база `POSTGRES_DB=game_assistant_db`, пользователь `POSTGRES_USER=app_user`. Поля `SPRING_DATASOURCE_*` для Docker заполнять не нужно: Compose задаёт их из `POSTGRES_*`. Прокси необязателен — оставьте `PROXY_HOST` пустым. Настройки почты приведены ниже; без SMTP письма доступны в Mailpit.
-
-Запустите приложение из корня:
+Заполните `.env`: `POSTGRES_PASSWORD`, разные `JWT_SECRET_ACCESS` и `JWT_SECRET_REFRESH`, а также `ADMIN_EMAIL`, `ADMIN_LOGIN`, `ADMIN_PASSWORD`. Каждый JWT-секрет сгенерируйте отдельно командой `openssl rand -base64 64`. Администратор создаётся, если такого email ещё нет.
 
 ```bash
 docker compose up --build -d --wait --wait-timeout 240
 ```
 
-Сайт: [http://localhost](http://localhost). Для входа администратором используйте `ADMIN_EMAIL` и `ADMIN_PASSWORD`. Заполненный `.env` содержит секреты и не должен попадать в Git.
+Сайт: [http://localhost](http://localhost). Порт задаёт `APP_PORT`; `APP_PUBLIC_URL` должен совпадать с адресом сайта в браузере, включая схему и порт. Для публичного размещения используйте HTTPS. Секреты из `.env` не добавляйте в Git.
 
-## ИИ-модели
+Основные команды из корня:
 
-Укажите `OPENROUTER_API_KEY` в корневом `.env`. Для платных моделей пополните баланс OpenRouter. Список моделей находится в `backend/config/ai-models.yaml`: `id` — внутренний идентификатор, `name` — название в интерфейсе, `remote-id` — идентификатор OpenRouter, `enabled` — доступность, `max-output-tokens` — предел ответа. `default-model` должен совпадать с `id` доступной модели. Модель по умолчанию также можно выбрать в админке.
+```bash
+docker compose logs -f          # журналы сервисов
+docker compose up --build -d    # пересобрать и обновить приложение
+docker compose down            # остановить, сохранив БД и файлы
+```
 
-После изменения каталога выполните `docker compose restart backend`. После изменения `.env` — `docker compose up -d backend`. При необходимости SOCKS5-прокси задаётся через `PROXY_HOST`, `PROXY_PORT`, `PROXY_LOGIN` и `PROXY_PASSWORD`.
+Для разработки frontend нужны Node.js 22.13+ и npm 10+. Сначала запустите backend:
 
-## Почта
+```bash
+APP_PUBLIC_URL=http://localhost:3000 docker compose up --build -d backend
+```
 
-По умолчанию письма подтверждения и восстановления пароля доступны только в локальном [Mailpit](http://localhost:8025). Для отправки через Gmail задайте в корневом `.env`:
+API доступен только локально на `127.0.0.1:8080`. `APP_PUBLIC_URL` в команде задаёт адрес frontend для ссылок из писем.
+
+Затем в другом терминале:
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm ci
+npm run dev
+```
+
+Frontend: [http://localhost:3000](http://localhost:3000). В `.env.local` по умолчанию указаны `BACKEND_URL=http://127.0.0.1:8080` и `APP_PUBLIC_URL=http://localhost:3000`.
+
+Основные команды из `frontend/`:
+
+```bash
+npm run check          # lint, TypeScript, тесты и production build
+npm run format         # форматирование Prettier
+npm run build          # production-сборка
+npm exec playwright install chromium  # один раз перед E2E
+npm run test:e2e        # браузерные тесты после build
+```
+
+Backend-тесты: `cd backend && ./gradlew test`.
+
+## Подключение ИИ-моделей
+
+Для ответов нужен `OPENROUTER_API_KEY`; для платных моделей — баланс OpenRouter. Каталог находится в `backend/config/ai-models.yaml`:
+
+- `id` — внутренний идентификатор;
+- `name` — название в интерфейсе;
+- `remote-id` — идентификатор модели OpenRouter;
+- `enabled` — доступность;
+- `max-output-tokens` — предел ответа.
+
+`default-model` должен указывать на доступную модель. Модель по умолчанию также меняется в админке. После изменения YAML выполните `docker compose restart backend`; после изменения `.env` — `docker compose up -d backend`.
+
+SOCKS5-прокси необязателен: `PROXY_HOST`, `PROXY_PORT`, `PROXY_LOGIN`, `PROXY_PASSWORD`. Без прокси оставьте `PROXY_HOST` пустым.
+
+## Подключение почты
+
+По умолчанию письма доступны в локальном [Mailpit](http://localhost:8025). Для отправки через Gmail укажите в корневом `.env`:
 
 ```dotenv
 SPRING_MAIL_HOST=smtp.gmail.com
@@ -53,7 +90,7 @@ EMAIL_ADDRESS=sender@example.com
 EMAIL_APP_PASSWORD=your-app-password
 SMTP_AUTH=true
 SMTP_STARTTLS=true
-APP_PUBLIC_URL=http://localhost
+APP_PUBLIC_URL=https://your-domain.example
 ```
 
-Замените адрес и пароль приложения своими. `EMAIL_ADDRESS` используется как SMTP-логин и отправитель. Для размещённого сайта укажите в `APP_PUBLIC_URL` его публичный адрес — он используется в ссылках из писем. Примените настройки: `docker compose up -d backend`.
+`EMAIL_ADDRESS` используется как SMTP-логин и отправитель. Подставьте собственные значения и примените `docker compose up -d backend`. При изменении публичного адреса также пересоздайте frontend: `docker compose up -d frontend`.

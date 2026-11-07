@@ -1,5 +1,6 @@
+"use client";
+
 import { categoryApi } from "entities/game";
-import { usePageTitle } from "shared/lib/page-title";
 import { bindClasses } from "shared/lib/styles";
 import { SelectDropdown } from "shared/ui/select-dropdown";
 import { ToggleSlider } from "shared/ui/toggle-slider";
@@ -8,7 +9,15 @@ import { Header } from "widgets/header";
 
 import style0 from "./MainPage.module.scss";
 import { useCatalog } from "../model/useCatalog";
-export default function MainPage() {
+
+import type { Game } from "entities/game";
+import type { Page } from "shared/lib/validation";
+
+export default function MainPage({
+  initialCatalog,
+}: {
+  initialCatalog: Page<Game>;
+}) {
   const {
     games,
     topGames,
@@ -30,9 +39,7 @@ export default function MainPage() {
     setPagesLoaded,
     handleSelectFavourites,
     handleFavouriteChange,
-  } = useCatalog();
-
-  usePageTitle("Каталог игр");
+  } = useCatalog(initialCatalog);
 
   return (
     <div className={cx("catalog-root")}>
@@ -108,7 +115,11 @@ export default function MainPage() {
                     onOpenGame={(g) => setSelectedGame(g)}
                     loading={gameLoading && !games.length}
                     error={games.length ? null : gameError}
-                    emptyMessage={search.trim() || selectedCategory || showFavourites ? "Ничего не найдено" : "Игр пока нет"}
+                    emptyMessage={
+                      search.trim() || selectedCategory || showFavourites
+                        ? "Ничего не найдено"
+                        : "Игр пока нет"
+                    }
                   />
                 )}
 

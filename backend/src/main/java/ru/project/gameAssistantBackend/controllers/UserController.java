@@ -45,7 +45,7 @@ public class UserController {
     @PatchMapping("/{userId}/password")
     public void updatePassword(
             @PathVariable("userId") Long userId,
-            @RequestBody UpdatePasswordDTO updatePasswordDTO)
+            @jakarta.validation.Valid @RequestBody UpdatePasswordDTO updatePasswordDTO)
             throws UserNotFoundException {
         User user = userServiceImpl.getById(userId);
         userServiceImpl.updatePassword(user, updatePasswordDTO.newPassword());
@@ -107,7 +107,7 @@ public class UserController {
     @PatchMapping("/{userId}/make-admin")
     public ResponseDTO makeAdmin(@PathVariable("userId") Long userId)
             throws UserNotFoundException {
-        userServiceImpl.updateRole(userId);
+        userServiceImpl.updateRole(userId, ru.project.gameAssistantBackend.models.Role.ADMIN);
         return new ResponseDTO(String.format(
                 "Пользователь с id = %d теперь имеет роль ADMIN", userId));
     }
@@ -116,7 +116,7 @@ public class UserController {
     @PatchMapping("/{userId}/make-not-admin")
     public ResponseDTO makeNotAdmin(@PathVariable("userId") Long userId)
             throws UserNotFoundException {
-        userServiceImpl.updateRole(userId);
+        userServiceImpl.updateRole(userId, ru.project.gameAssistantBackend.models.Role.USER);
         return new ResponseDTO(String.format(
                 "Пользователь с id = %d теперь имеет роль USER", userId));
     }

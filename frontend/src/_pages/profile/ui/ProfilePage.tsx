@@ -1,6 +1,9 @@
-import { AvatarControl } from "features/avatar";
+"use client";
+
 import { AnimatePresence, motion } from "framer-motion";
-import { usePageTitle } from "shared/lib/page-title";
+import Link from "next/link";
+
+import { AvatarControl } from "features/avatar";
 import { bindClasses } from "shared/lib/styles";
 import { formatDate } from "shared/lib/utils";
 import { SelectDropdown } from "shared/ui/select-dropdown";
@@ -38,10 +41,7 @@ export default function ProfilePage() {
     setSelectedGame,
     chatsLoading,
     chats,
-    handleChatClick,
   } = useProfile();
-
-  usePageTitle("Личный кабинет");
 
   return (
     <div className={cx("profile-root")}>
@@ -220,7 +220,6 @@ export default function ProfilePage() {
                               key={c.id}
                               layout
                               layoutId={`chat-${c.id}`}
-                              className={cx("profile-chat-item")}
                               initial={{
                                 opacity: 0,
                                 y: 8,
@@ -253,22 +252,21 @@ export default function ProfilePage() {
                                   ease: [0.2, 0.8, 0.2, 1],
                                 },
                               }}
-                              onClick={() => handleChatClick(c)}
-                              role="button"
-                              tabIndex={0}
-                              onKeyDown={(e) =>
-                                e.key === "Enter" && handleChatClick(c)
-                              }
                             >
-                              <div className={cx("profile-chat-game")}>
-                                {c.gameTitle || "—"}
-                              </div>
-                              <div className={cx("profile-chat-title")}>
-                                {c.title || "—"}
-                              </div>
-                              <div className={cx("profile-chat-time")}>
-                                {formatDate(c.lastUseTime)}
-                              </div>
+                              <Link
+                                href={`/games/ai/${c.gameId}/${c.id}`}
+                                className={cx("profile-chat-item")}
+                              >
+                                <div className={cx("profile-chat-game")}>
+                                  {c.gameTitle || "—"}
+                                </div>
+                                <div className={cx("profile-chat-title")}>
+                                  {c.title || "—"}
+                                </div>
+                                <div className={cx("profile-chat-time")}>
+                                  {formatDate(c.lastUseTime)}
+                                </div>
+                              </Link>
                             </motion.li>
                           ))}
                         </AnimatePresence>

@@ -1,7 +1,9 @@
 const { copyFileSync, cpSync, mkdirSync, readFileSync } = require("node:fs");
 const path = require("node:path");
 
-const reactPdfDirectory = path.dirname(require.resolve("react-pdf/package.json"));
+const reactPdfDirectory = path.dirname(
+  require.resolve("react-pdf/package.json"),
+);
 const pdfjsPackage = require.resolve("pdfjs-dist/package.json", {
   paths: [reactPdfDirectory],
 });

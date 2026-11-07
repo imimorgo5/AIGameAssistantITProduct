@@ -12,3 +12,7 @@ coverage
 public/pdf.worker.min.mjs
 
 public/pdfjs/
+
+.next
+playwright-report
+test-results

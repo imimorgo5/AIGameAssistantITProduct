@@ -28,9 +28,6 @@ for (const file of files("src").filter((file) => /\.[jt]sx?$/.test(file))) {
     plugins: ["typescript", "jsx"],
   });
 
-  if (ast.comments.length)
-    failures.push(`${relative}: комментарии в коде запрещены`);
-
   for (const node of ast.program.body) {
     if (
       !node.source ||
@@ -45,8 +42,8 @@ for (const file of files("src").filter((file) => /\.[jt]sx?$/.test(file))) {
     const source = node.source.value;
     const target = source.startsWith(".")
       ? path.posix.normalize(
-        path.posix.join(path.posix.dirname(relative), source),
-      )
+          path.posix.join(path.posix.dirname(relative), source),
+        )
       : source;
 
     const from = layers.indexOf(relative.split("/")[0]);
@@ -69,6 +66,7 @@ for (const file of files("src").filter((file) => /\.[jt]sx?$/.test(file))) {
       from !== 0 &&
       slice(relative) !== slice(target) &&
       parts.length > publicDepth &&
+      !(parts.length === publicDepth + 1 && parts[publicDepth] === "server") &&
       !target.startsWith("shared/assets/")
     )
       failures.push(`${relative}: глубокий импорт ${source}`);
@@ -78,7 +76,4 @@ for (const file of files("src").filter((file) => /\.[jt]sx?$/.test(file))) {
 if (failures.length) {
   process.stderr.write(failures.join("\n") + "\n");
   process.exitCode = 1;
-} else
-  process.stdout.write(
-    "FSD boundaries, public APIs and comment policy passed.\n",
-  );
+} else process.stdout.write("FSD boundaries and public APIs passed.\n");

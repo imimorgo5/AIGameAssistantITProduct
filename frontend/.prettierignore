@@ -1,0 +1,9 @@
+node_modules
+.next
+coverage
+playwright-report
+test-results
+public/pdfjs
+public/pdf.worker.min.mjs
+package-lock.json
+next-env.d.ts

@@ -1,5 +1,5 @@
+import { requestCache } from "shared/api/cache";
 import { apiClient } from "shared/api/http";
-import { clearTokens } from "shared/lib/storage";
 
 import { categoryApi } from "./category";
 import { gameApi } from "./game";
@@ -14,7 +14,7 @@ const game = {
 
 afterEach(() => {
   jest.restoreAllMocks();
-  clearTokens();
+  requestCache.clear();
 });
 test("shares game reads and refetches after an update", async () => {
   const get = jest.spyOn(apiClient, "get").mockResolvedValue({ data: game });
@@ -61,9 +61,13 @@ test("category changes invalidate the category list used by selectors", async ()
 test("sends and receives the full multiline description", async () => {
   const description = "Полное описание\n".repeat(90);
   const saved = { ...game, description };
-  const request = jest.spyOn(apiClient, "request").mockResolvedValue({ data: saved });
+  const request = jest
+    .spyOn(apiClient, "request")
+    .mockResolvedValue({ data: saved });
   jest.spyOn(apiClient, "get").mockResolvedValue({ data: saved });
-  await expect(gameApi.create({ title: game.title, description, categories: [] })).resolves.toEqual(saved);
+  await expect(
+    gameApi.create({ title: game.title, description, categories: [] }),
+  ).resolves.toEqual(saved);
   const body = request.mock.calls[0]?.[0]?.data;
   expect(body).toBeInstanceOf(FormData);
   if (!(body instanceof FormData)) throw new Error("Expected FormData");

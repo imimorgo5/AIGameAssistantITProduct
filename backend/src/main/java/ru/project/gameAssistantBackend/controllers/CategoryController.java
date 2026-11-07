@@ -44,7 +44,7 @@ public class CategoryController {
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @PostMapping
-    public CategoryResponseDTO create(@RequestBody CategoryRequestDTO categoryRequestDTO){
+    public CategoryResponseDTO create(@jakarta.validation.Valid @RequestBody CategoryRequestDTO categoryRequestDTO){
         if(categoryService.isExists(categoryRequestDTO.name())){
             throw new RuntimeException("Категория с таким названием уже существует");
         }

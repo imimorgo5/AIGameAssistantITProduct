@@ -62,7 +62,7 @@ public class ChatController {
     }
 
     @PostMapping("/start")
-    public ChatDTO startChat(@RequestBody StartChatDTO startChatDTO)
+    public ChatDTO startChat(@jakarta.validation.Valid @RequestBody StartChatDTO startChatDTO)
             throws GameNotFoundException, SystemPropertiesNotFoundException, UserNotFoundException {
         Chat chat = chatServiceImpl.startChat(startChatDTO);
         return chatMapper.mapToChatDTO(chat);
@@ -71,7 +71,7 @@ public class ChatController {
     @PutMapping("/{chatId}")
     public ChatDTO continueChat(
             @PathVariable("chatId") Long chatId,
-            @RequestBody SystemPropertiesDTO systemPropertiesDTO)
+            @jakarta.validation.Valid @RequestBody SystemPropertiesDTO systemPropertiesDTO)
             throws ChatNotFoundException, UserNotFoundException {
         ownedChat(chatId);
         Chat chat = chatServiceImpl.continueChat(chatId, systemPropertiesDTO);

@@ -18,10 +18,12 @@ import java.io.IOException;
 public class JwtFilter extends GenericFilterBean {
     private static final String AUTHORIZATION = "Authorization";
     private final JwtProvider jwtProvider;
+    private final ru.project.gameAssistantBackend.repository.UserRepository users;
 
     @Autowired
-    public JwtFilter(JwtProvider jwtProvider) {
+    public JwtFilter(JwtProvider jwtProvider, ru.project.gameAssistantBackend.repository.UserRepository users) {
         this.jwtProvider = jwtProvider;
+        this.users = users;
     }
 
     @Override
@@ -30,9 +32,10 @@ public class JwtFilter extends GenericFilterBean {
         final String token = getTokenFromRequest((HttpServletRequest) request);
         if (token != null && jwtProvider.validateAccessToken(token)) {
             final Claims claims = jwtProvider.getAccessClaims(token);
-            final JwtAuthentication jwtInfoToken = JwtUtils.generate(claims);
-            jwtInfoToken.setAuthenticated(true);
-            SecurityContextHolder.getContext().setAuthentication(jwtInfoToken);
+            users.findByEmail(claims.getSubject()).filter(user -> user.isEnabled() && user.getRefreshToken() != null).ifPresent(user -> {
+                final JwtAuthentication authentication = new JwtAuthentication(user.getEmail(), user.getRole());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            });
         }
         fc.doFilter(request, response);
     }

@@ -3,7 +3,6 @@ import { API_BASE_URL, ignoreResponse, mutate, read } from "shared/api/http";
 import { accessRedirect } from "shared/lib/access";
 import { responseMessage } from "shared/lib/errors";
 import { parseSseEvent } from "shared/lib/sse";
-import { getAccessToken } from "shared/lib/storage";
 import { page } from "shared/lib/validation";
 
 import { parseChat, parseChatPreview } from "../model/types";
@@ -78,24 +77,23 @@ export const chatApi = {
     { onChunk, onComplete, onError }: StreamCallbacks = {},
   ) => {
     const controller = new AbortController();
-    const token = getAccessToken();
     const url = `${API_BASE_URL}/api/chat/${encodeURIComponent(chatId)}/answer`;
     (async () => {
       const response = await fetch(url, {
         method: "POST",
         headers: {
           Accept: "text/event-stream",
-          ...(token
-            ? {
-              Authorization: `Bearer ${token}`,
-            }
-            : {}),
+          "X-Requested-With": "XMLHttpRequest",
         },
         signal: controller.signal,
       });
 
       if (!response.ok) {
-        const target = accessRedirect(response.status, Boolean(getAccessToken()), window.location.pathname);
+        const target = accessRedirect(
+          response.status,
+          true,
+          window.location.pathname,
+        );
         if (target) window.location.replace(target);
 
         const text = await response.text();
@@ -106,7 +104,12 @@ export const chatApi = {
           body = text;
         }
 
-        throw new Error(responseMessage(body, "Не удалось получить ответ модели. Попробуйте ещё раз."));
+        throw new Error(
+          responseMessage(
+            body,
+            "Не удалось получить ответ модели. Попробуйте ещё раз.",
+          ),
+        );
       }
 
       if (!response.body) throw new Error("Поток ответа недоступен");

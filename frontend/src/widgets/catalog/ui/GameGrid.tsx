@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+
 import { bindClasses } from "shared/lib/styles";
 
 import GameCard from "./GameCard";
@@ -31,7 +32,9 @@ export default function GameGrid({
         ) : error ? (
           <div className={cx("games-grid-error")}>{error}</div>
         ) : games.length === 0 ? (
-          <div className={cx("games-grid-empty")} role="status">{emptyMessage}</div>
+          <div className={cx("games-grid-empty")} role="status">
+            {emptyMessage}
+          </div>
         ) : (
           <div className={cx("games-grid")}>
             <AnimatePresence mode="popLayout" initial={false}>

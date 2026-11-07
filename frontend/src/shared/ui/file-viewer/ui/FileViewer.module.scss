@@ -296,7 +296,12 @@
 }
 
 @container file-viewer (max-width: 520px) {
-  .pdf-controls { justify-content: center; }
+  .pdf-controls {
+    justify-content: center;
+  }
 
-  .pdf-pagination, .pdf-zoom { justify-content: center; }
+  .pdf-pagination,
+  .pdf-zoom {
+    justify-content: center;
+  }
 }

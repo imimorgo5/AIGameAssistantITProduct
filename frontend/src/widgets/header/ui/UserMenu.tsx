@@ -1,6 +1,8 @@
-import { useAuth } from "entities/session";
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+
+import { useAuth } from "entities/session";
 import { fileApi } from "shared/api/file";
 import { bindClasses } from "shared/lib/styles";
 import { useTheme } from "shared/lib/theme";
@@ -62,7 +64,10 @@ export default function UserMenu({ currentUser }: Props) {
         >
           <span className={cx("user-avatar")}>
             {avatarBlobUrl ? (
-              <img
+              <Image
+                unoptimized
+                width={512}
+                height={512}
                 src={avatarBlobUrl}
                 alt={currentUser?.login || "avatar"}
                 className={cx("user-avatar-img")}
@@ -74,10 +79,10 @@ export default function UserMenu({ currentUser }: Props) {
         </button>
       ) : (
         <div className={cx("auth-links")}>
-          <Link to="/login" className={cx("link")}>
+          <Link href="/login" className={cx("link")}>
             Вход
           </Link>
-          <Link to="/register" className={cx("link")}>
+          <Link href="/register" className={cx("link")}>
             Регистрация
           </Link>
         </div>
@@ -138,11 +143,15 @@ export default function UserMenu({ currentUser }: Props) {
 
           <div className={cx("user-popup-actions")}>
             {currentUser?.isAdmin && (
-              <Link to="/admin" className={cx("user-popup-btn")} onClick={() => setOpen(false)}>
+              <Link
+                href="/admin"
+                className={cx("user-popup-btn")}
+                onClick={() => setOpen(false)}
+              >
                 Админ-панель
               </Link>
             )}
-            <Link to="/profile" className={cx("user-popup-btn")}>
+            <Link href="/profile" className={cx("user-popup-btn")}>
               Личный кабинет
             </Link>
             <button className={cx("user-popup-btn")} onClick={logout}>

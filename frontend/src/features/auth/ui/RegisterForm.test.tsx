@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
 
 import RegisterForm from "./RegisterForm";
 jest.mock("entities/session", () => ({
@@ -10,11 +9,9 @@ jest.mock("entities/session", () => ({
 
 function setup() {
   render(
-    <MemoryRouter
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <>
       <RegisterForm onSuccess={jest.fn()} />
-    </MemoryRouter>,
+    </>,
   );
 }
 

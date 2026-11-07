@@ -72,6 +72,9 @@ public class ChatServiceImpl implements ChatServiceI {
     @Override
     public Chat continueChat(Long id, SystemPropertiesDTO systemPropertiesDTO)
             throws ChatNotFoundException {
+        if (systemPropertiesDTO.prompt() == null || systemPropertiesDTO.prompt().isBlank() || systemPropertiesDTO.prompt().length() > 10000) {
+            throw new IllegalArgumentException("Сообщение должно содержать от 1 до 10000 символов");
+        }
         Chat chat = getChatById(id);
         chat.addMessage(systemPropertiesDTO.prompt(), ChatRole.user);
         return chatRepository.save(chat);
@@ -123,7 +126,7 @@ public class ChatServiceImpl implements ChatServiceI {
 
     public Page<Chat> getAllPagedChats(int page, int size, Long gameId, Long authUserId){
         Sort sort = Sort.by("lastUseTime").descending();
-        PageRequest pageRequest = PageRequest.of(page, size, sort);
+        PageRequest pageRequest = PageRequest.of(page, Math.min(size, 1000), sort);
         if (gameId != null) {
             return chatRepository.findByUzerIdAndGameId(authUserId, gameId, pageRequest);
         }

@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserServiceI {
                 Sort.Order.by("role").with(Sort.Direction.DESC),
                 Sort.Order.by("id").with(Sort.Direction.ASC));
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, Math.min(size, 1000), sort);
         Specification<User> spec = userSpecification.loginOrEmailContains(filter);
         return userRepository.findAll(spec, pageable);
     }
@@ -72,17 +72,13 @@ public class UserServiceImpl implements UserServiceI {
                 .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
     }
 
-    public User getUserByPasswordResetToken(String token) {
-        return userRepository.findByPasswordResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
-    }
 
     @Transactional
     public User create(UserRequestDTO userRequestDTO){
         User user = new User();
         user.setEmail(userRequestDTO.email());
         user.setLogin(userRequestDTO.login());
-        user.setPassword(passwordEncoder.encode(userRequestDTO.password()));
+        user.setPassword(encodePassword(userRequestDTO.password()));
         user.setRole(Role.USER);
         user.setEnabled(false);
 
@@ -94,8 +90,9 @@ public class UserServiceImpl implements UserServiceI {
     @Transactional
     @Override
     public void updatePassword(User user, String password) {
-        String newEncodedPassword = passwordEncoder.encode(password);
+        String newEncodedPassword = encodePassword(password);
         user.setPassword(newEncodedPassword);
+        user.setRefreshToken(null);
         userRepository.save(user);
     }
 
@@ -110,9 +107,8 @@ public class UserServiceImpl implements UserServiceI {
     @Override
     public User updateImage(User user, MultipartFile imageFile) {
         String oldUserImageTitle = user.getImageFileTitle();
-        fileServiceImpl.delete(oldUserImageTitle);
-
         String newUserImageTitle = fileServiceImpl.save(imageFile);
+        fileServiceImpl.delete(oldUserImageTitle);
         user.setImageFileTitle(newUserImageTitle);
         userRepository.save(user);
 
@@ -121,13 +117,9 @@ public class UserServiceImpl implements UserServiceI {
 
     @Transactional
     @Override
-    public void updateRole(Long id) throws UserNotFoundException {
+    public void updateRole(Long id, Role role) throws UserNotFoundException {
         User user = getById(id);
-        if(user.getRole().equals(Role.ADMIN)){
-            user.setRole(Role.USER);
-        } else {
-            user.setRole(Role.ADMIN);
-        }
+        user.setRole(role);
         userRepository.save(user);
     }
 
@@ -136,16 +128,33 @@ public class UserServiceImpl implements UserServiceI {
         userRepository.save(user);
     }
 
-    public void setNullPasswordResetToken(User user){
+    @Transactional
+    public void resetPassword(String token, String password) {
+        if (token == null || token.isBlank()) throw new IllegalArgumentException("Ссылка восстановления недействительна");
+        User user = userRepository.findByPasswordResetToken(token)
+                .orElseThrow(() -> new IllegalArgumentException("Ссылка восстановления недействительна"));
+        if (user.getPasswordResetExpiresAt() == null || !user.getPasswordResetExpiresAt().isAfter(java.time.Instant.now())) {
+            throw new IllegalArgumentException("Срок действия ссылки восстановления истёк");
+        }
         user.setPasswordResetToken(null);
-        userRepository.save(user);
+        user.setPasswordResetExpiresAt(null);
+        updatePassword(user, password);
     }
 
+    @Transactional
     public String setPasswordResetToken(User user) {
         String token = UUID.randomUUID().toString();
         user.setPasswordResetToken(token);
+        user.setPasswordResetExpiresAt(java.time.Instant.now().plusSeconds(3600));
         userRepository.save(user);
         return token;
+    }
+
+    private String encodePassword(String password) {
+        if (password == null || password.isBlank() || password.length() < 4 || password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("Пароль должен содержать минимум 4 символа и не более 72 байт UTF-8");
+        }
+        return passwordEncoder.encode(password);
     }
 
     @Transactional

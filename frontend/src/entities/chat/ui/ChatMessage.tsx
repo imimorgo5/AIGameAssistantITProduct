@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import { bindClasses } from "shared/lib/styles";
 
 import style1 from "./ChatMessage.module.scss";
@@ -15,12 +16,15 @@ export default function ChatMessage({ msg }: Props) {
   const isAssistant = role === "assistant";
   const isStreaming = !!msg._streaming;
   const text = String(msg.text || "");
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!isAssistant) return;
-
-    setCopied(false);
-  }, [msg.id, isAssistant]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copied = copiedId === msg.id;
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    },
+    [],
+  );
   const copyToClipboard = async () => {
     const textToCopy = text;
     try {
@@ -37,10 +41,11 @@ export default function ChatMessage({ msg }: Props) {
         document.body.removeChild(ta);
       }
 
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch (e) {
-      setCopied(false);
+      setCopiedId(msg.id);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopiedId(null), 1800);
+    } catch {
+      setCopiedId(null);
     }
   };
 
@@ -61,7 +66,11 @@ export default function ChatMessage({ msg }: Props) {
       <div className={cx("chat-message bot")}>
         <div className={cx("chat-message-plain")}>
           {isStreaming && !hasAnyText ? (
-            <div className={cx("chat-message-text")} role="status" aria-label="Ожидаем ответ модели">
+            <div
+              className={cx("chat-message-text")}
+              role="status"
+              aria-label="Ожидаем ответ модели"
+            >
               <span className={cx("streaming-dots")} aria-hidden>
                 <span>•</span>
                 <span>•</span>
@@ -69,13 +78,7 @@ export default function ChatMessage({ msg }: Props) {
               </span>
             </div>
           ) : (
-            <div
-              className={cx(
-                "chat-message-text",
-              )}
-            >
-              {text}
-            </div>
+            <div className={cx("chat-message-text")}>{text}</div>
           )}
 
           {!isStreaming && (
@@ -105,8 +108,7 @@ export default function ChatMessage({ msg }: Props) {
                       height="13"
                       rx="2"
                       ry="2"
-                    >
-                    </rect>
+                    ></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                   </svg>
                 ) : (

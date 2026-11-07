@@ -55,7 +55,7 @@ public class GameServiceImpl implements GameServiceI {
         if (!allowed.contains(sortBy)) sortBy = "title";
 
         Sort sort = Sort.by(direction, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, Math.min(size, 1000), sort);
         Specification<Game> spec = gameSpecification.titleOrDescriptionContains(filter)
                 .and(gameSpecification.hasCategory(category));
 
@@ -70,7 +70,7 @@ public class GameServiceImpl implements GameServiceI {
         }
 
         Sort sort = Sort.by(direction, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Pageable pageable = PageRequest.of(page, Math.min(size, 1000), sort);
 
         Specification<Game> spec = gameSpecification.titleOrDescriptionContains(filter)
                 .and(gameSpecification.hasCategory(category))
@@ -132,7 +132,7 @@ public class GameServiceImpl implements GameServiceI {
         }
 
         List<String> categoryNames = gameRequestDTO.categories();
-        if(categoryNames != null && !categoryNames.isEmpty()){
+        if(categoryNames != null){
             Set<Category> categories = categoryService.getCategories(categoryNames);
             game.setCategories(categories);
         }
@@ -140,8 +140,8 @@ public class GameServiceImpl implements GameServiceI {
         MultipartFile newImageFile = gameRequestDTO.imageFile();
         if(newImageFile != null && !newImageFile.isEmpty()){
             String oldImageFileTitle = game.getImageFileTitle();
-            fileServiceImpl.delete(oldImageFileTitle);
             String newImageFileTitle = fileServiceImpl.save(newImageFile);
+            fileServiceImpl.delete(oldImageFileTitle);
             game.setImageFileTitle(newImageFileTitle);
         }
 
@@ -176,6 +176,7 @@ public class GameServiceImpl implements GameServiceI {
         if (rulesFileTitle != null) {
             fileServiceImpl.delete(rulesFileTitle.replaceFirst("(?i)\\.pdf$", ".md"));
         }
+        for (User user : Set.copyOf(game.getUsers())) user.removeGame(game);
         gameRepository.delete(game);
     }
 

@@ -1,8 +1,10 @@
-import { categoryApi } from "entities/game";
 import React, { useState } from "react";
+
+import { categoryApi } from "entities/game";
 import { errorMessage } from "shared/lib/errors";
 import { fileError, textError, useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
+import { originalFileName } from "shared/lib/utils";
 import { ModalActions } from "shared/ui/modal";
 import { SelectDropdown } from "shared/ui/select-dropdown";
 
@@ -39,10 +41,22 @@ export default function GameForm({
   const validateDescription = (value: string) => textError(value, 1500, false);
   const titleField = useBlurField(title, validateTitle);
   const descriptionField = useBlurField(description, validateDescription);
-  const imageField = useBlurField(imageFile?.name || "", () => fileError(imageFile, "image", Boolean(initial?.imageFileTitle)));
-  const rulesField = useBlurField(rulesFile?.name || "", () => fileError(rulesFile, "pdf", Boolean(initial?.rulesFileTitle)));
-  const categoryField = useBlurField(categories.join(","), (value) => textError(value, 500));
-  const canSubmit = !validateTitle(title) && !validateDescription(description) && categories.length > 0 && categories.length <= 5 && !fileError(imageFile, "image", Boolean(initial?.imageFileTitle)) && !fileError(rulesFile, "pdf", Boolean(initial?.rulesFileTitle));
+  const imageField = useBlurField(imageFile?.name || "", () =>
+    fileError(imageFile, "image", Boolean(initial?.imageFileTitle)),
+  );
+  const rulesField = useBlurField(rulesFile?.name || "", () =>
+    fileError(rulesFile, "pdf", Boolean(initial?.rulesFileTitle)),
+  );
+  const categoryField = useBlurField(categories.join(","), (value) =>
+    textError(value, 500),
+  );
+  const canSubmit =
+    !validateTitle(title) &&
+    !validateDescription(description) &&
+    categories.length > 0 &&
+    categories.length <= 5 &&
+    !fileError(imageFile, "image", Boolean(initial?.imageFileTitle)) &&
+    !fileError(rulesFile, "pdf", Boolean(initial?.rulesFileTitle));
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!canSubmit || submitting) return;
@@ -62,7 +76,9 @@ export default function GameForm({
 
       await onSave(payload, mode, initial?.id);
     } catch (cause) {
-      setSaveError(errorMessage(cause, "Не удалось сохранить игру. Попробуйте ещё раз."));
+      setSaveError(
+        errorMessage(cause, "Не удалось сохранить игру. Попробуйте ещё раз."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -86,7 +102,11 @@ export default function GameForm({
           maxLength={30}
           required
         />
-        {titleField.error && <span className={cx("form-field-error")} role="alert">{titleField.error}</span>}
+        {titleField.error && (
+          <span className={cx("form-field-error")} role="alert">
+            {titleField.error}
+          </span>
+        )}
       </label>
 
       <label className={cx("form-row")}>
@@ -97,7 +117,8 @@ export default function GameForm({
           aria-label="Категории игры"
           data-invalid={!!categoryField.error}
           onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget)) categoryField.onBlur();
+            if (!event.currentTarget.contains(event.relatedTarget))
+              categoryField.onBlur();
           }}
         >
           <SelectDropdown
@@ -116,7 +137,11 @@ export default function GameForm({
             placeholder="Категории"
           />
         </div>
-        {categoryField.error && <span className={cx("form-field-error")} role="alert">{categoryField.error}</span>}
+        {categoryField.error && (
+          <span className={cx("form-field-error")} role="alert">
+            {categoryField.error}
+          </span>
+        )}
       </label>
 
       <label className={cx("form-row")}>
@@ -131,8 +156,14 @@ export default function GameForm({
           onChange={(e) => setDescription(e.target.value)}
           maxLength={1500}
         />
-        <span id="game-description-help" className={cx("file-note")}>{description.length} / 1500 символов</span>
-        {descriptionField.error && <span className={cx("form-field-error")} role="alert">{descriptionField.error}</span>}
+        <span id="game-description-help" className={cx("file-note")}>
+          {description.length} / 1500 символов
+        </span>
+        {descriptionField.error && (
+          <span className={cx("form-field-error")} role="alert">
+            {descriptionField.error}
+          </span>
+        )}
       </label>
 
       <label className={cx("form-row")}>
@@ -146,13 +177,17 @@ export default function GameForm({
           onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
           required={initial == null}
         />
-        {imageField.error && <span className={cx("form-field-error")} role="alert">{imageField.error}</span>}
+        {imageField.error && (
+          <span className={cx("form-field-error")} role="alert">
+            {imageField.error}
+          </span>
+        )}
         {initial?.imageFileTitle && !imageFile && (
           <div className={cx("file-note")}>
             Текущее:{" "}
-            {initial.imageFileTitle.slice(14).length > 30
-              ? initial.imageFileTitle.slice(14).slice(0, 30) + "…"
-              : initial.imageFileTitle.slice(14)}
+            {originalFileName(initial.imageFileTitle).length > 30
+              ? originalFileName(initial.imageFileTitle).slice(0, 30) + "…"
+              : originalFileName(initial.imageFileTitle)}
           </div>
         )}
       </label>
@@ -168,18 +203,26 @@ export default function GameForm({
           onChange={(e) => setRulesFile(e.target.files?.[0] ?? null)}
           required={initial == null}
         />
-        {rulesField.error && <span className={cx("form-field-error")} role="alert">{rulesField.error}</span>}
+        {rulesField.error && (
+          <span className={cx("form-field-error")} role="alert">
+            {rulesField.error}
+          </span>
+        )}
         {initial?.rulesFileTitle && !rulesFile && (
           <div className={cx("file-note")}>
             Текущее:{" "}
-            {initial.rulesFileTitle.slice(14).length > 30
-              ? initial.rulesFileTitle.slice(14).slice(0, 30) + "…"
-              : initial.rulesFileTitle.slice(14)}
+            {originalFileName(initial.rulesFileTitle).length > 30
+              ? originalFileName(initial.rulesFileTitle).slice(0, 30) + "…"
+              : originalFileName(initial.rulesFileTitle)}
           </div>
         )}
       </label>
 
-      {saveError && <p className={cx("form-field-error")} role="alert">{saveError}</p>}
+      {saveError && (
+        <p className={cx("form-field-error")} role="alert">
+          {saveError}
+        </p>
+      )}
       <ModalActions>
         <button
           type="button"
@@ -189,7 +232,11 @@ export default function GameForm({
         >
           Отмена
         </button>
-        <button type="submit" className={cx("btn")} disabled={submitting || !canSubmit}>
+        <button
+          type="submit"
+          className={cx("btn")}
+          disabled={submitting || !canSubmit}
+        >
           {submitting
             ? "Сохранение..."
             : mode === "create"

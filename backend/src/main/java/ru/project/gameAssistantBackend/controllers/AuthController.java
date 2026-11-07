@@ -54,7 +54,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public JwtResponse login(@RequestBody JwtRequest authRequest)
+    public JwtResponse login(@jakarta.validation.Valid @RequestBody JwtRequest authRequest)
             throws UserNotFoundException, PasswordInvalidException,
             AccountNotEnabledException, AuthException {
         if(authServiceImpl.isCredentialsCorrect(authRequest)){
@@ -66,7 +66,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public UserResponseDTO registration(@RequestBody UserRequestDTO userRequestDTO)
+    public UserResponseDTO registration(@jakarta.validation.Valid @RequestBody UserRequestDTO userRequestDTO)
             throws UserConflictException {
         User user = authServiceImpl.register(userRequestDTO);
         emailService.sendEmailConfirmEmail(user.getEmail(), user.getVerificationToken());
@@ -74,20 +74,20 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public String logout(@RequestBody RefreshJwtRequest request)
+    public String logout(@jakarta.validation.Valid @RequestBody RefreshJwtRequest request)
             throws TokenNotFoundException {
         authServiceImpl.logout(request.refreshToken());
         return "Вы вышли из аккаунта";
     }
 
     @PostMapping("/token")
-    public JwtResponse getNewAccessToken(@RequestBody RefreshJwtRequest request)
+    public JwtResponse getNewAccessToken(@jakarta.validation.Valid @RequestBody RefreshJwtRequest request)
             throws UserNotFoundException {
         return authServiceImpl.getAccessToken(request.refreshToken());
     }
 
     @PostMapping("/refresh")
-    public JwtResponse getNewRefreshToken(@RequestBody RefreshJwtRequest request)
+    public JwtResponse getNewRefreshToken(@jakarta.validation.Valid @RequestBody RefreshJwtRequest request)
             throws UserNotFoundException, TokenNotFoundException, TokenInvalidException {
         return authServiceImpl.refresh(request.refreshToken());
     }
@@ -109,10 +109,8 @@ public class AuthController {
     }
 
     @PatchMapping("/reset-password")
-    public String resetPassword(@RequestBody ResetPasswordDTO resetPasswordDTO){
-        User user = userServiceImpl.getUserByPasswordResetToken(resetPasswordDTO.token());
-        userServiceImpl.setNullPasswordResetToken(user);
-        userServiceImpl.updatePassword(user, resetPasswordDTO.password());
+    public String resetPassword(@jakarta.validation.Valid @RequestBody ResetPasswordDTO resetPasswordDTO){
+        userServiceImpl.resetPassword(resetPasswordDTO.token(), resetPasswordDTO.password());
         return "Пароль успешно обновлен";
     }
 }

@@ -77,7 +77,6 @@
   border: 1px solid var(--section-border);
 }
 
-
 .admin-header .admin-btn-logout {
   padding: 5px 15px;
   font-size: 16px;
@@ -130,5 +129,7 @@
 }
 
 @media (max-width: 599px) {
-  .admin-model { --select-max-width: 100%; }
+  .admin-model {
+    --select-max-width: 100%;
+  }
 }

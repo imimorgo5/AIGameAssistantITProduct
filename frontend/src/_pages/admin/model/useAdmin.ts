@@ -1,8 +1,9 @@
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
 import { modelApi } from "entities/ai";
 import { categoryApi, gameApi } from "entities/game";
 import { useAuth, userApi } from "entities/session";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
 import { fileApi } from "shared/api/file";
 import { downloadBlob } from "shared/lib/blobUtils";
 import { errorMessage } from "shared/lib/errors";
@@ -35,7 +36,7 @@ interface ViewerState {
 
 export function useAdmin() {
   const { logout } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [items, setItems] = useState<(User | Game)[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -65,9 +66,10 @@ export function useAdmin() {
     initial: null,
   });
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const activeTab: Tab = tabParam === "games" || tabParam === "settings" ? tabParam : "users";
+  const activeTab: Tab =
+    tabParam === "games" || tabParam === "settings" ? tabParam : "users";
   const dataRequest = useRef(0);
   useEffect(
     () => () => {
@@ -163,12 +165,9 @@ export function useAdmin() {
       });
   }, [activeTab, page, debouncedSearch, currentUser, loadData]);
   const switchTab = (tab: Tab) => {
-    setSearchParams((previous) => {
-      const next = new URLSearchParams(previous);
-      next.set("tab", tab);
-
-      return next;
-    });
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("tab", tab);
+    router.push(`/admin?${next.toString()}`, { scroll: false });
     setItems([]);
     setSearch("");
     setPage(1);
@@ -184,9 +183,7 @@ export function useAdmin() {
         if (!mounted) return;
 
         if (!authUser?.isAdmin) {
-          navigate("/", {
-            replace: true,
-          });
+          router.replace("/");
 
           return;
         }
@@ -204,7 +201,7 @@ export function useAdmin() {
     return () => {
       mounted = false;
     };
-  }, [navigate]);
+  }, [router]);
   const handleDeleteUser = (user: User) => {
     setConfirmState({
       open: true,
@@ -217,9 +214,7 @@ export function useAdmin() {
           });
           if (currentUser && user.id === currentUser.id) {
             await logout();
-            navigate("/login", {
-              replace: true,
-            });
+            router.replace("/login");
 
             return;
           }
@@ -272,7 +267,7 @@ export function useAdmin() {
       }
 
       if (currentUser && user.id === currentUser.id) {
-        navigate("/");
+        router.push("/");
 
         return;
       }

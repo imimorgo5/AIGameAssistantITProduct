@@ -1,4 +1,9 @@
 .tile-card {
+  display: block;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
   width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: var(--radius);

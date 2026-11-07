@@ -15,4 +15,3 @@ export {
   repeatedPasswordError,
   validPassword,
 } from "./model/validation";
-export { default as PrivateRoute } from "./ui/PrivateRoute";

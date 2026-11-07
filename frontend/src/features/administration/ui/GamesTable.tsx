@@ -1,4 +1,5 @@
 import { bindClasses } from "shared/lib/styles";
+import { originalFileName } from "shared/lib/utils";
 
 import style0 from "./AdminLayout.module.scss";
 import style1 from "./AdminTable.module.scss";
@@ -71,9 +72,9 @@ export default function GamesTable({
                           : onDownloadFile("image", g.imageFileTitle ?? "")
                       }
                     >
-                      {g.imageFileTitle.slice(14).length > 30
-                        ? g.imageFileTitle.slice(14).slice(0, 30) + "…"
-                        : g.imageFileTitle.slice(14)}
+                      {originalFileName(g.imageFileTitle).length > 30
+                        ? originalFileName(g.imageFileTitle).slice(0, 30) + "…"
+                        : originalFileName(g.imageFileTitle)}
                     </button>
                   ) : (
                     "-"
@@ -89,9 +90,9 @@ export default function GamesTable({
                           : onDownloadFile("pdf", g.rulesFileTitle ?? "")
                       }
                     >
-                      {g.rulesFileTitle.slice(14).length > 30
-                        ? g.rulesFileTitle.slice(14).slice(0, 30) + "…"
-                        : g.rulesFileTitle.slice(14)}
+                      {originalFileName(g.rulesFileTitle).length > 30
+                        ? originalFileName(g.rulesFileTitle).slice(0, 30) + "…"
+                        : originalFileName(g.rulesFileTitle)}
                     </button>
                   ) : (
                     "-"

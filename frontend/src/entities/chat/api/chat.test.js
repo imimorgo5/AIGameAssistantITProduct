@@ -13,12 +13,12 @@ function stream(parts) {
     read: jest.fn(async () =>
       values.length
         ? {
-          value: values.shift(),
-          done: false,
-        }
+            value: values.shift(),
+            done: false,
+          }
         : {
-          done: true,
-        },
+            done: true,
+          },
     ),
     cancel: jest.fn(async () => {}),
     releaseLock: jest.fn(),
@@ -82,8 +82,17 @@ test.each([
   ['{"message":"Модель временно недоступна"}', "Модель временно недоступна"],
   ["Слишком много запросов", "Слишком много запросов"],
   ["", "Не удалось получить ответ модели. Попробуйте ещё раз."],
-])("preserves server error text before the stream starts", async (body, message) => {
-  global.fetch.mockResolvedValue({ ok: false, status: 429, text: async () => body });
-  const error = await new Promise((resolve) => chatApi.streamAnswer(1, { onError: resolve }));
-  expect(error.message).toBe(message);
-});
+])(
+  "preserves server error text before the stream starts",
+  async (body, message) => {
+    global.fetch.mockResolvedValue({
+      ok: false,
+      status: 429,
+      text: async () => body,
+    });
+    const error = await new Promise((resolve) =>
+      chatApi.streamAnswer(1, { onError: resolve }),
+    );
+    expect(error.message).toBe(message);
+  },
+);

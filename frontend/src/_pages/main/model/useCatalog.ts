@@ -1,88 +1,58 @@
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
 import { favouriteApi, gameApi } from "entities/game";
 import { useAuth, userApi } from "entities/session";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { errorMessage } from "shared/lib/errors";
+import { useMediaQuery } from "shared/lib/react";
 import { useDebounce } from "shared/lib/useDebounce";
 
 import type { Game } from "entities/game";
 import type { User } from "entities/session";
+import type { Page } from "shared/lib/validation";
 
-function increment() {
-  const width = window.innerWidth;
-  if (width < 549) return 3;
-
-  if (width < 799) return 4;
-
-  if (width < 1099) return 6;
-
-  if (width < 1399) return 8;
-
-  return 10;
+interface Result {
+  key: string;
+  data: Page<Game>;
+  error: string | null;
 }
 
-export function useCatalog() {
+export function useCatalog(initialCatalog: Page<Game>) {
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-  const [games, setGames] = useState<Game[]>([]);
-  const [topGames, setTopGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [gameLoading, setGameLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [gameError, setGameError] = useState<string | null>(null);
+  const router = useRouter();
   const [userInfo, setUserInfo] = useState<User | null>(null);
   const [search, setSearchValue] = useState("");
   const [pagesLoaded, setPagesLoaded] = useState(1);
-  const [pageSize, setPageSize] = useState(increment);
-  const [absoluteCount, setAbsoluteCount] = useState(0);
+  const small = useMediaQuery("(max-width: 548px)");
+  const medium = useMediaQuery("(max-width: 798px)");
+  const large = useMediaQuery("(max-width: 1098px)");
+  const wide = useMediaQuery("(max-width: 1398px)");
+  const pageSize = small ? 3 : medium ? 4 : large ? 6 : wide ? 8 : 10;
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [selectedCategory, setSelectedCategoryValue] = useState<string | null>(
     null,
   );
-
   const [showFavourites, setShowFavourites] = useState(false);
   const debouncedSearch = useDebounce(search, 280);
   const visibleCount = pagesLoaded * pageSize;
-  const loadingMore = gameLoading && pagesLoaded > 1;
+  const favourites = showFavourites && isAuthenticated;
+  const filter = debouncedSearch.trim() || null;
+  const key = JSON.stringify([
+    visibleCount,
+    filter,
+    selectedCategory,
+    favourites,
+  ]);
+  const [result, setResult] = useState<Result>({
+    key: JSON.stringify([10, null, null, false]),
+    data: initialCatalog,
+    error: null,
+  });
+  const gameLoading = result.key !== key;
   useEffect(() => {
-    const resize = () => setPageSize(increment());
-    window.addEventListener("resize", resize, {
-      passive: true,
-    });
-
-    return () => window.removeEventListener("resize", resize);
-  }, []);
-  useEffect(() => {
+    if (!isAuthenticated) return;
     let active = true;
-    gameApi
-      .getAllPaged(0, 10)
-      .then((data) => {
-        if (active) {
-          setTopGames(data.content);
-          setError(null);
-        }
-      })
-      .catch((cause: unknown) => {
-        if (active)
-          setError(errorMessage(cause, "Ошибка при загрузке топ-10 игр"));
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
-  useEffect(() => {
-    let active = true;
-    if (!isAuthenticated) {
-      setUserInfo(null);
-
-      return;
-    }
-
-    userApi
+    void userApi
       .getAuthenticated()
       .then((user) => {
         if (active) setUserInfo(user);
@@ -90,90 +60,72 @@ export function useCatalog() {
       .catch(() => {
         if (active) setUserInfo(null);
       });
-
     return () => {
       active = false;
     };
   }, [isAuthenticated]);
   useEffect(() => {
     let active = true;
-    setGameLoading(true);
-    setGameError(null);
-    const filter = debouncedSearch.trim() || null;
-    const load =
-      showFavourites && isAuthenticated
-        ? favouriteApi.getAllPaged
-        : gameApi.getAllPaged;
-
-    load(0, visibleCount, filter, selectedCategory)
+    const load = favourites ? favouriteApi.getAllPaged : gameApi.getAllPaged;
+    void load(0, visibleCount, filter, selectedCategory)
       .then((data) => {
-        if (active) {
-          setGames(data.content);
-          setAbsoluteCount(data.totalElements);
-        }
+        if (active) setResult({ key, data, error: null });
       })
       .catch((cause: unknown) => {
         if (active)
-          setGameError(errorMessage(cause, "Ошибка при загрузке игр"));
-      })
-      .finally(() => {
-        if (active) setGameLoading(false);
+          setResult((previous) => ({
+            ...previous,
+            key,
+            error: errorMessage(cause, "Ошибка при загрузке игр"),
+          }));
       });
-
     return () => {
       active = false;
     };
-  }, [
-    debouncedSearch,
-    selectedCategory,
-    showFavourites,
-    isAuthenticated,
-    visibleCount,
-  ]);
+  }, [favourites, visibleCount, filter, selectedCategory, key]);
   const setSearch = (value: string) => {
     setSearchValue(value);
     setPagesLoaded(1);
   };
-
   const setSelectedCategory = (value: string | null) => {
     setSelectedCategoryValue(value);
     setPagesLoaded(1);
   };
-
   const handleSelectFavourites = (value: boolean) => {
     if (!isAuthenticated) {
-      navigate("/login");
-
+      router.push("/login");
       return;
     }
-
     setShowFavourites(value);
     setPagesLoaded(1);
   };
-
   const handleFavouriteChange = (game: Game, favourite: boolean) => {
-    if (showFavourites && !favourite) {
-      setGames((previous) => previous.filter((item) => item.id !== game.id));
-      setAbsoluteCount((count) => Math.max(0, count - 1));
-    }
+    if (showFavourites && !favourite)
+      setResult((previous) => ({
+        ...previous,
+        data: {
+          ...previous.data,
+          content: previous.data.content.filter((item) => item.id !== game.id),
+          totalElements: Math.max(0, previous.data.totalElements - 1),
+        },
+      }));
   };
-
   return {
-    games,
-    topGames,
-    loading,
+    games: result.data.content,
+    topGames: initialCatalog.content,
+    loading: false,
+    error: null,
     gameLoading,
-    loadingMore,
-    error,
-    gameError,
-    userInfo,
+    loadingMore: gameLoading && pagesLoaded > 1,
+    gameError: result.key === key ? result.error : null,
+    userInfo: isAuthenticated ? userInfo : null,
     search,
     setSearch,
     visibleCount,
-    absoluteCount,
+    absoluteCount: result.data.totalElements,
     selectedGame,
     setSelectedGame,
-    showFavourites,
+    showFavourites: favourites,
     selectedCategory,
     setSelectedCategory,
     setPagesLoaded,
