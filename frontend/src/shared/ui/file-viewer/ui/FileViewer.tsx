@@ -21,6 +21,7 @@ interface Props {
   onClose?: () => void;
   closeIcon?: ReactNode;
   closeButtonClassName?: string;
+  appearance?: "default" | "sidebar";
 }
 
 export default function FileViewer(props: Props) {
@@ -39,6 +40,7 @@ function FileViewerContent({
   onClose,
   closeIcon,
   closeButtonClassName,
+  appearance = "default",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [renderWidth, setRenderWidth] = useState(600);
@@ -97,7 +99,7 @@ function FileViewerContent({
   );
 
   return (
-    <div className={cx("file-viewer-root")}>
+    <div className={cx("file-viewer-root")} data-appearance={appearance}>
       <div className={cx("file-viewer-header")}>
         <div className={cx("file-viewer-leading")}>
           {onClose && (
@@ -120,21 +122,50 @@ function FileViewerContent({
         <div className={cx("file-viewer-actions")}>
           {fileType === "pdf" && fileUrl && !loading && (
             <a
-              className={cx("pdf-button")}
+              className={cx("file-viewer-action")}
+              aria-label="Открыть PDF"
+              title="Открыть PDF"
               href={fileUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
-              Открыть PDF
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M14 3h7v7M21 3 10 14" />
+                <path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
+              </svg>
             </a>
           )}
           <button
             type="button"
-            className={cx("pdf-button")}
+            className={cx("file-viewer-action")}
+            aria-label="Скачать"
+            title="Скачать"
             onClick={() => downloadBlob(fileUrl, true, fileTitle)}
             disabled={!fileUrl || loading}
           >
-            Скачать
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3v12m-5-5 5 5 5-5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" />
+            </svg>
           </button>
         </div>
       </div>

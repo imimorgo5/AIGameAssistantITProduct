@@ -38,6 +38,8 @@
   display: flex;
   min-width: 0;
   aspect-ratio: 1;
+  padding: 10px;
+  box-sizing: border-box;
   scroll-snap-align: start;
 }
 
@@ -72,10 +74,6 @@
 @media (hover: hover) and (pointer: fine) {
   .carousel-arrow:hover {
     transform: scale(1.15);
-  }
-
-  .carousel-item:hover {
-    transform: scale(1.03);
   }
 }
 

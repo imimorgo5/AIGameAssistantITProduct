@@ -1,3 +1,7 @@
+.chat-root {
+  --sidebar-top: 105px;
+}
+
 .chat-container {
   display: flex;
   align-items: flex-start;
@@ -9,6 +13,7 @@
 }
 
 .chat-page-switch-container {
+  --select-max-width: 320px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,7 +25,7 @@
 .sidebar-toggle {
   position: fixed;
   left: 0;
-  top: 105px;
+  top: var(--sidebar-top);
   z-index: 50;
   border-radius: 0 var(--radius) var(--radius) 0;
   border: 1px solid var(--section-border);
@@ -47,7 +52,7 @@
 .chat-sidebar {
   position: fixed;
   left: 0;
-  top: 105px;
+  top: var(--sidebar-top);
   bottom: 0;
   width: 350px;
   max-height: 85vh;
@@ -371,10 +376,13 @@
 }
 
 @media (max-width: 900px) {
+  .chat-root {
+    --sidebar-top: 55px;
+  }
+
   .chat-sidebar {
     width: 70%;
     max-height: calc(85vh + 50px);
-    top: 55px;
   }
 
   .sessions-sidebar {
@@ -382,7 +390,6 @@
   }
 
   .sidebar-toggle {
-    top: 55px;
   }
 
   .sessions-sidebar.open ~ .chat-main {
@@ -409,7 +416,10 @@
 
 @media (max-width: 599px) {
   .chat-page-switch-container {
-    margin-top: 93px;
+    --select-max-width: 100%;
+    box-sizing: border-box;
+    padding-inline: 30px;
+    margin-top: 112px;
     margin-bottom: 10px;
   }
 
@@ -556,7 +566,15 @@
 }
 
 @media (max-width: 599px) {
-  .chat-sidebar {
-    top: 148px;
+  .chat-main {
+    padding-inline: 30px;
+  }
+
+  .chat-input-area {
+    width: 100%;
+  }
+
+  .chat-messages {
+    padding-right: 0;
   }
 }

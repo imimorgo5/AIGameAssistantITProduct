@@ -348,6 +348,7 @@ function ChatContent() {
                   fileType="pdf"
                   fileTitle={game?.rulesFileTitle ?? ""}
                   title="Правила игры"
+                  appearance="sidebar"
                   closeIcon={<RulesIcon />}
                   closeButtonClassName={cx("chat-sidebar-btn")}
                   onClose={() => setRulesSidebarOpen(false)}

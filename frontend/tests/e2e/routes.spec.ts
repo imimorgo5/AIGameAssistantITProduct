@@ -202,6 +202,47 @@ test("keeps carousel images mounted across forward and backward scrolling", asyn
   const first = carousel.locator("[class*=carousel-item]").first();
   await expect(first.locator("img")).toHaveAttribute("src", /^blob:/);
   const source = await first.locator("img").getAttribute("src");
+  if (
+    await page.evaluate(
+      () => matchMedia("(hover: hover) and (pointer: fine)").matches,
+    )
+  ) {
+    const neighbor = carousel.locator("[class*=carousel-item]").nth(1);
+    const before = await neighbor.boundingBox();
+    const viewportBefore = await carousel
+      .getByLabel("Список популярных игр")
+      .evaluate((element) => ({
+        left: element.scrollLeft,
+        width: element.scrollWidth,
+      }));
+    await first.getByRole("button").hover();
+    await expect(first.getByRole("button")).toHaveCSS(
+      "transform",
+      "matrix(1.03, 0, 0, 1.03, 0, 0)",
+    );
+    expect(await neighbor.boundingBox()).toEqual(before);
+    const bounds = await first.evaluate((element) => {
+      const parent = element.getBoundingClientRect();
+      const card = element.querySelector("button")?.getBoundingClientRect();
+      return Boolean(
+        card &&
+        card.left >= parent.left &&
+        card.right <= parent.right &&
+        card.top >= parent.top &&
+        card.bottom <= parent.bottom,
+      );
+    });
+    expect(bounds).toBe(true);
+    expect(
+      await carousel
+        .getByLabel("Список популярных игр")
+        .evaluate((element) => ({
+          left: element.scrollLeft,
+          width: element.scrollWidth,
+        })),
+    ).toEqual(viewportBefore);
+  }
+
   await first.evaluate((element) => {
     element.setAttribute("data-retained", "yes");
   });
@@ -254,4 +295,155 @@ test("toggles password visibility independently on authentication forms", async 
   await expect(page.getByRole("button", { name: /автопрокрутку/ })).toHaveCount(
     0,
   );
+});
+
+test("aligns both mobile chat drawers with their opening buttons", async ({
+  page,
+  context,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await context.request.post("/api/auth/login", {
+    data: { email: "player@example.com", password: "password" },
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+  await page.goto("/games/ai/7");
+  const sessionsButton = page.getByRole("button", {
+    name: "Открыть список чатов",
+  });
+  await expect(sessionsButton).toBeVisible();
+  const sessionsTop = (await sessionsButton.boundingBox())?.y;
+  await sessionsButton.click();
+  await expect
+    .poll(() =>
+      page
+        .locator('aside[class*="sessions-sidebar"]')
+        .evaluate((element) => element.getBoundingClientRect().top),
+    )
+    .toBe(sessionsTop);
+  await page.getByRole("button", { name: "Свернуть меню" }).click();
+  const rulesButton = page.getByRole("button", {
+    name: "Открыть правила",
+    exact: true,
+  });
+  const rulesTop = (await rulesButton.boundingBox())?.y;
+  await rulesButton.click();
+  await expect
+    .poll(() =>
+      page
+        .locator('aside[class*="rules-sidebar"]')
+        .evaluate((element) => element.getBoundingClientRect().top),
+    )
+    .toBe(rulesTop);
+});
+
+for (const width of [390, 768]) {
+  test(`aligns rules close icon, title and opener at width ${width}`, async ({
+    page,
+    context,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await context.request.post("/api/auth/login", {
+      data: { email: "player@example.com", password: "password" },
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+    await page.route("**/api/games/7", (route) =>
+      route.fulfill({
+        json: {
+          id: 7,
+          title: "Игра",
+          description: "Правила",
+          categories: [],
+          imageFileTitle: null,
+          rulesFileTitle: "rules.pdf",
+        },
+      }),
+    );
+    await page.route("**/api/files/rules/rules.pdf", (route) =>
+      route.fulfill({
+        contentType: "application/pdf",
+        body: "%PDF-1.4\n%%EOF",
+      }),
+    );
+    await page.goto("/games/ai/7");
+    const opener = page.getByRole("button", {
+      name: "Открыть правила",
+      exact: true,
+    });
+    await expect(opener).toBeVisible();
+    const openerCenter = await opener.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    });
+    await opener.click();
+    const close = page.getByRole("button", { name: "Закрыть просмотрщик" });
+    await expect(close).toBeVisible();
+    const closeCenter = await close.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.top + rect.height / 2;
+    });
+    const titleCenter = await page
+      .getByRole("heading", { name: "Правила игры", exact: true })
+      .evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      });
+    for (const action of [
+      page.getByRole("link", { name: "Открыть PDF" }),
+      page.getByRole("button", { name: "Скачать", exact: true }),
+    ]) {
+      await expect(action).toBeVisible();
+      const center = await action.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      });
+      expect(Math.abs(center - titleCenter)).toBeLessThanOrEqual(1);
+    }
+    expect(Math.abs(closeCenter - titleCenter)).toBeLessThanOrEqual(1);
+    expect(Math.abs(closeCenter - openerCenter)).toBeLessThanOrEqual(1);
+  });
+}
+
+test("keeps model selection compact until the mobile layout moves it below the drawer buttons", async ({
+  page,
+  context,
+}) => {
+  await context.request.post("/api/auth/login", {
+    data: { email: "player@example.com", password: "password" },
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+  await page.setViewportSize({ width: 690, height: 900 });
+  await page.goto("/games/ai/7");
+  const model = page.getByRole("button", { name: "Модель нейросети" });
+  await expect(model).toBeVisible();
+  await expect
+    .poll(() =>
+      model.evaluate((element) => element.getBoundingClientRect().width),
+    )
+    .toBe(320);
+  for (const width of [599, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect
+      .poll(() =>
+        model.evaluate((element) => element.getBoundingClientRect().width),
+      )
+      .toBe(width - 60);
+    const modelBounds = await model.boundingBox();
+    const dialogBounds = await page
+      .locator('[class*="chat-dialog-container"]')
+      .boundingBox();
+    const inputBounds = await page
+      .locator('[class*="chat-input-area"]')
+      .boundingBox();
+    expect(modelBounds?.x).toBe(dialogBounds?.x);
+    expect(modelBounds?.width).toBe(dialogBounds?.width);
+    expect(modelBounds?.x).toBe(inputBounds?.x);
+    expect(modelBounds?.width).toBe(inputBounds?.width);
+    const modelTop = await model.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    );
+    const openerBottom = await page
+      .getByRole("button", { name: "Открыть правила", exact: true })
+      .evaluate((element) => element.getBoundingClientRect().bottom);
+    expect(modelTop).toBeGreaterThanOrEqual(openerBottom);
+  }
 });

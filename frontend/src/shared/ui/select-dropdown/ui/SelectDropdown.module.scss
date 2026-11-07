@@ -224,7 +224,7 @@
   }
 
   .seldd-root[data-appearance="compact"] {
-    max-width: 100%;
+    max-width: var(--select-max-width, 100%);
   }
 }
 
