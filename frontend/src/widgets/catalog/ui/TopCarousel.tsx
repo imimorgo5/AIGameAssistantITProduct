@@ -1,16 +1,13 @@
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { useStableCallback } from "shared/lib/react";
+import { useMediaQuery, useStableCallback } from "shared/lib/react";
 import { bindClasses } from "shared/lib/styles";
 
 import GameCard from "./GameCard";
-import style0 from "./TopCarousel.module.scss";
+import styles from "./TopCarousel.module.scss";
 
 import type { Game } from "entities/game";
-
-const leftArrow = "/images/left-arrow.svg";
-const rightArrow = "/images/right-arrow.svg";
 
 interface Props {
   items?: Game[];
@@ -18,221 +15,124 @@ interface Props {
 }
 
 export default function TopCarousel({ items = [], onOpenGame }: Props) {
-  const [index, setIndex] = useState(0);
-  const [pageNumber, setPageNumber] = useState(0);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const windowRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const visibleCount = useResponsiveCount();
-  const length = items.length || 0;
-  const pages = Math.max(1, Math.ceil(length / visibleCount));
-  const [animating, setAnimating] = useState(false);
-  const animDirectionRef = useRef(1);
-  const [buffer, setBuffer] = useState<Game[]>([]);
-  const [translatePx, setTranslatePx] = useState(0);
-  const gap = 20;
-  const [itemWidth, setItemWidth] = useState(0);
-  const TRANS_MS = 1000;
-  const FINISH_PAD = 70;
-  const animTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const indexRef = useRef(index);
-  const animatingRef = useRef(animating);
-  useEffect(() => {
-    indexRef.current = index;
-  }, [index]);
-  useEffect(() => {
-    animatingRef.current = animating;
-  }, [animating]);
-  useEffect(() => {
-    const handleVisible = () => {
-      if (document.visibilityState === "visible") {
-        if (!trackRef.current) return;
+  const viewport = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+  const small = useMediaQuery("(max-width: 549px)");
+  const medium = useMediaQuery(
+    "(max-width: 749px), (min-width: 900px) and (max-width: 1199px)",
+  );
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const visibleCount = small ? 1 : medium ? 2 : 3;
+  const pages = Math.max(1, Math.ceil(items.length / visibleCount));
+  const [page, setPage] = useState(0);
+  const destination = useRef<number | null>(null);
+  const activePage = Math.min(page, pages - 1);
 
-        if (!animatingRef.current) return;
-
-        if (animTimeoutRef.current) {
-          clearTimeout(animTimeoutRef.current);
-          animTimeoutRef.current = null;
-        }
-
-        const currIndex = indexRef.current;
-        const nextIndex = mod(
-          currIndex + animDirectionRef.current * visibleCount,
-          length,
-        );
-
-        setAnimating(false);
-        setBuffer(buildDisplay(nextIndex, visibleCount, items));
-        setTranslatePx(0);
-        setIndex(nextIndex);
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisible);
-    window.addEventListener("focus", handleVisible);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisible);
-      window.removeEventListener("focus", handleVisible);
-    };
-  }, [visibleCount, items, length]);
-  useEffect(() => {
-    if (!windowRef.current) return;
-
-    const ro = new ResizeObserver(() => recalcItemWidth());
-    ro.observe(windowRef.current);
-    recalcItemWidth();
-    window.addEventListener("resize", recalcItemWidth);
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", recalcItemWidth);
-    };
-
-    function recalcItemWidth() {
-      const win = windowRef.current;
-      if (!win) return;
-
-      const totalGap = gap * (visibleCount - 1);
-      const w = Math.max(0, win.clientWidth - 10 - totalGap);
-      const per = Math.floor(w / visibleCount);
-      setItemWidth(per);
-    }
-  }, [visibleCount]);
-  useEffect(() => {
-    return () => {
-      if (animTimeoutRef.current) {
-        clearTimeout(animTimeoutRef.current);
-        animTimeoutRef.current = null;
-      }
-
-      if (autoTimerRef.current) {
-        clearInterval(autoTimerRef.current);
-        autoTimerRef.current = null;
-      }
-    };
-  }, []);
-  const finalizeAnimation = (nextIndex: number) => {
-    setAnimating(false);
-    setBuffer(buildDisplay(nextIndex, visibleCount, items));
-    setTranslatePx(0);
-    setIndex(nextIndex);
-  };
-
-  const triggerGo = useStableCallback((dir: number) => {
-    if (animating) return;
-
-    if (length <= visibleCount) return;
-
-    if (!itemWidth || itemWidth <= 0) return;
-
-    animDirectionRef.current = dir;
-    const nextIndex = mod(index + dir * visibleCount, length);
-    const prevIndex = mod(index - visibleCount, length);
-    const current = buildDisplay(index, visibleCount, items);
-    const next = buildDisplay(nextIndex, visibleCount, items);
-    const prev = buildDisplay(prevIndex, visibleCount, items);
-    const rawStep = (itemWidth + gap) * visibleCount;
-    const step = Math.round(rawStep);
-    let combined: Game[], initialTranslate: number, targetTranslate: number;
-    if (dir === 1) {
-      combined = [...current, ...next];
-      initialTranslate = 0;
-      targetTranslate = -step;
-    } else {
-      combined = [...prev, ...current];
-      initialTranslate = -step;
-      targetTranslate = 0;
-    }
-
-    setPageNumber((p) => (p + pages + dir) % pages);
-    if (animTimeoutRef.current) {
-      clearTimeout(animTimeoutRef.current);
-      animTimeoutRef.current = null;
-    }
-
-    setBuffer(combined);
-    setTranslatePx(initialTranslate);
-    setAnimating(false);
-    requestAnimationFrame(() => {
-      if (trackRef.current) trackRef.current.getBoundingClientRect();
-
-      setAnimating(true);
-      requestAnimationFrame(() => {
-        setTranslatePx(targetTranslate);
-      });
+  const goTo = useStableCallback((nextPage: number) => {
+    const container = viewport.current;
+    const cards = track.current?.children;
+    const target = cards?.item(nextPage * visibleCount);
+    const first = cards?.item(0);
+    if (
+      !container ||
+      !(target instanceof HTMLElement) ||
+      !(first instanceof HTMLElement)
+    )
+      return;
+    destination.current = nextPage;
+    container.scrollTo({
+      left: target.offsetLeft - first.offsetLeft,
+      behavior: reducedMotion ? "instant" : "smooth",
     });
-    animTimeoutRef.current = setTimeout(() => {
-      animTimeoutRef.current = null;
-      finalizeAnimation(nextIndex);
-    }, TRANS_MS + FINISH_PAD);
+  });
+
+  const move = useStableCallback((direction: number) => {
+    const current = destination.current ?? activePage;
+    goTo((current + direction + pages) % pages);
+  });
+
+  const synchronize = useStableCallback(() => {
+    const container = viewport.current;
+    const cards = track.current?.children;
+    const first = cards?.item(0);
+    const next = cards?.item(visibleCount);
+    if (!container || !(first instanceof HTMLElement)) return;
+    const maxScroll = Math.max(
+      0,
+      container.scrollWidth - container.clientWidth,
+    );
+    const step =
+      next instanceof HTMLElement
+        ? next.offsetLeft - first.offsetLeft
+        : container.clientWidth;
+    const current =
+      maxScroll < 1
+        ? 0
+        : container.scrollLeft >= maxScroll - 2
+          ? pages - 1
+          : Math.round(container.scrollLeft / Math.max(1, step));
+    setPage(Math.max(0, Math.min(pages - 1, current)));
   });
 
   useEffect(() => {
-    if (autoTimerRef.current) {
-      clearInterval(autoTimerRef.current);
-      autoTimerRef.current = null;
-    }
-
-    if (length <= visibleCount) return;
-
-    if (!itemWidth || itemWidth <= 0) return;
-
-    autoTimerRef.current = setInterval(() => {
-      if (!animating) triggerGo(1);
-    }, 3000);
-
-    return () => {
-      if (autoTimerRef.current) {
-        clearInterval(autoTimerRef.current);
-        autoTimerRef.current = null;
-      }
+    const container = viewport.current;
+    if (!container) return;
+    const complete = () => {
+      destination.current = null;
+      synchronize();
     };
-  }, [visibleCount, length, animating, itemWidth, triggerGo]);
-  const go = (dir: number) => {
-    triggerGo(dir);
-  };
+    const observer = new ResizeObserver(() => {
+      destination.current = null;
+      synchronize();
+    });
+    observer.observe(container);
+    container.addEventListener("scrollend", complete);
+    return () => {
+      observer.disconnect();
+      container.removeEventListener("scrollend", complete);
+    };
+  }, [synchronize, visibleCount, items.length]);
 
-  const display = useMemo(() => {
-    if (animating) return buffer.slice(0, visibleCount * 2);
-
-    return buildDisplay(index, visibleCount, items);
-  }, [animating, buffer, index, visibleCount, items]);
+  useEffect(() => {
+    if (pages <= 1 || reducedMotion) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") move(1);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [pages, reducedMotion, move]);
 
   return (
-    <div className={cx("top-carousel")} ref={rootRef}>
+    <section
+      className={cx("top-carousel")}
+      aria-label="Популярные игры"
+      aria-roledescription="карусель"
+    >
       <button
         type="button"
         className={cx("carousel-arrow")}
-        onClick={() => go(-1)}
+        onClick={() => move(-1)}
+        disabled={pages <= 1}
         aria-label="Предыдущие игры"
       >
-        <Image unoptimized width={24} height={24} src={leftArrow} alt="" />
+        <Image
+          unoptimized
+          width={24}
+          height={24}
+          src="/images/left-arrow.svg"
+          alt=""
+        />
       </button>
-      <div className={cx("carousel-window")} ref={windowRef}>
-        <div
-          className={cx("carousel-track")}
-          ref={trackRef}
-          style={{
-            transform: `translate3d(${animating ? translatePx : 0}px,0,0)`,
-            transition: animating
-              ? `transform ${TRANS_MS}ms cubic-bezier(.2,.9,.2,1)`
-              : "none",
-            gap: `${gap}px`,
-          }}
-        >
-          {display.map((g, idx) => (
-            <div
-              key={g.id + "-" + idx}
-              className={cx("carousel-item")}
-              style={{
-                flex: `0 0 ${itemWidth}px`,
-                width: `${itemWidth}px`,
-                height: `${itemWidth}px`,
-              }}
-            >
-              <GameCard game={g} onOpen={() => onOpenGame(g)} />
+      <div
+        className={cx("carousel-window")}
+        ref={viewport}
+        onScroll={synchronize}
+        tabIndex={0}
+        aria-label="Список популярных игр"
+      >
+        <div className={cx("carousel-track")} ref={track}>
+          {items.map((game) => (
+            <div key={game.id} className={cx("carousel-item")}>
+              <GameCard game={game} onOpen={() => onOpenGame(game)} />
             </div>
           ))}
         </div>
@@ -240,64 +140,32 @@ export default function TopCarousel({ items = [], onOpenGame }: Props) {
       <button
         type="button"
         className={cx("carousel-arrow")}
-        onClick={() => go(1)}
+        onClick={() => move(1)}
+        disabled={pages <= 1}
         aria-label="Следующие игры"
       >
-        <Image unoptimized width={24} height={24} src={rightArrow} alt="" />
+        <Image
+          unoptimized
+          width={24}
+          height={24}
+          src="/images/right-arrow.svg"
+          alt=""
+        />
       </button>
-
       <div className={cx("carousel-indicators")}>
-        {Array.from({
-          length: pages,
-        }).map((_, i) => (
-          <div
-            key={i}
-            className={cx(`indicator ${i === pageNumber ? "active" : ""}`)}
+        {Array.from({ length: pages }, (_, index) => (
+          <button
+            key={index}
+            type="button"
+            className={cx(`indicator ${index === activePage ? "active" : ""}`)}
+            aria-label={`Страница игр ${index + 1}`}
+            aria-current={index === activePage ? "page" : undefined}
+            onClick={() => goTo(index)}
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-function useResponsiveCount() {
-  const [count, setCount] = useState(3);
-  useEffect(() => {
-    const onR = () => setCount(calc());
-    onR();
-    window.addEventListener("resize", onR);
-
-    return () => window.removeEventListener("resize", onR);
-  }, []);
-
-  return count;
-
-  function calc() {
-    const w = window.innerWidth;
-    if (w < 550) return 1;
-
-    if ((w < 1200 && w > 899) || w < 750) return 2;
-
-    return 3;
-  }
-}
-
-const cx = bindClasses(style0);
-
-function buildDisplay(startIdx: number, count: number, arr: Game[]) {
-  const out: Game[] = [];
-  const n = arr.length || 0;
-  if (!n) return out;
-
-  for (let i = 0; i < Math.min(count, n); i++) {
-    const idx = mod(startIdx + i, n);
-    const it = arr[idx];
-    if (it) out.push(it);
-  }
-
-  return out;
-}
-
-function mod(n: number, m: number) {
-  return ((n % m) + m) % m;
-}
+const cx = bindClasses(styles);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 import { ChatMessage, ChatSidebarItem } from "entities/chat";
 import { ModelSelect } from "features/model-select";
@@ -13,8 +13,8 @@ import style0 from "./ChatPage.module.scss";
 import RulesIcon from "./RulesIcon";
 import { useChat } from "../model/useChat";
 export default function ChatPage() {
-  const params = useParams<{ segments?: string[] }>();
-  return <ChatContent key={params.segments?.[0] ?? "none"} />;
+  const segments = usePathname().split("/").slice(3);
+  return <ChatContent key={segments[0] ?? "none"} />;
 }
 
 function ChatContent() {
@@ -60,7 +60,7 @@ function ChatContent() {
   } = useChat();
 
   return (
-    <div className={cx("chat-root")}>
+    <div className={cx("chat-root")} data-chat-page>
       <Header
         currentUser={currentUser}
         centralTitle={!gameLoading && !error ? (game?.title ?? "") : ""}

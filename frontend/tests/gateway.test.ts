@@ -189,3 +189,22 @@ test("enforces the upload limit even without Content-Length", async () => {
   expect(response.status).toBe(413);
   expect(backend).not.toHaveBeenCalled();
 });
+
+test("accepts browser same-origin login when the public URL differs from the local dev address", async () => {
+  process.env.APP_PUBLIC_URL = "http://localhost";
+  backend.mockResolvedValue(
+    Response.json({ accessToken: "access", refreshToken: "refresh" }),
+  );
+  const req = new NextRequest("http://127.0.0.1:3000/api/auth/login", {
+    method: "POST",
+    headers: {
+      Origin: "http://localhost:3000",
+      "Sec-Fetch-Site": "same-origin",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+    body: "{}",
+  });
+  const response = await forwardApi(req, ["auth", "login"]);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ success: true });
+});

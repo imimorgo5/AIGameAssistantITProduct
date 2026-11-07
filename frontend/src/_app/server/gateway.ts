@@ -110,11 +110,12 @@ export async function forwardApi(
   const mutation = !["GET", "HEAD"].includes(request.method);
   if (mutation) {
     const origin = request.headers.get("origin");
+    const fetchSite = request.headers.get("sec-fetch-site");
     const expectedOrigin = new URL(process.env.APP_PUBLIC_URL ?? request.url)
       .origin;
     if (
-      (origin && origin !== expectedOrigin) ||
-      request.headers.get("sec-fetch-site") === "cross-site" ||
+      (origin && origin !== expectedOrigin && fetchSite !== "same-origin") ||
+      fetchSite === "cross-site" ||
       request.headers.get("x-requested-with") !== "XMLHttpRequest"
     )
       return failure("Запрос отклонён", 403);

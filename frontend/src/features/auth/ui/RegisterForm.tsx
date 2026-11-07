@@ -12,6 +12,7 @@ import {
 import { errorMessage } from "shared/lib/errors";
 import { useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
+import { PasswordInput } from "shared/ui/password-input";
 
 import styles from "./AuthPages.module.scss";
 
@@ -142,10 +143,9 @@ export default function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
 
         <div className={cx("auth-form-row")}>
-          <input
+          <PasswordInput
             id="reg-password"
             name="password"
-            type="password"
             className={cx("auth-form-input")}
             value={password}
             onChange={handlePasswordChange}
@@ -170,10 +170,9 @@ export default function RegisterForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
 
         <div className={cx("auth-form-row")}>
-          <input
+          <PasswordInput
             id="reg-password-again"
             name="passwordAgain"
-            type="password"
             className={cx("auth-form-input")}
             value={passwordAgain}
             onChange={handlePasswordAgainChange}

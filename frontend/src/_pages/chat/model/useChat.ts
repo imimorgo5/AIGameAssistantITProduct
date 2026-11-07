@@ -1,4 +1,4 @@
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { modelApi } from "entities/ai";
@@ -86,9 +86,11 @@ function groupSessionsByTime(sessions: Session[]): [string, Session[]][] {
 
 export function useChat() {
   const router = useRouter();
-  const params = useParams<{ segments?: string[] }>();
-  const routeGameId = params.segments?.[0];
-  const routeChatId = params.segments?.[1];
+  const pathname = usePathname();
+  const segments = pathname.split("/").slice(3);
+  const pendingNewChatPath = useRef<string | null>(null);
+  const routeGameId = segments[0];
+  const routeChatId = segments[1];
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(true);
@@ -517,7 +519,11 @@ export function useChat() {
         controller,
         streamId,
       };
-      router.replace(`/games/ai/${game.id}/${session.id}`);
+      window.history.replaceState(
+        null,
+        "",
+        `/games/ai/${game.id}/${session.id}`,
+      );
     } catch (cause) {
       fail(cause);
     }
@@ -540,6 +546,7 @@ export function useChat() {
   const handleNewChat = () => {
     if (!game || sending || chatLoading) return;
 
+    pendingNewChatPath.current = `/games/ai/${game.id}`;
     fetchIdRef.current += 1;
     closeActiveStream();
     setActiveSession(null);
@@ -548,7 +555,7 @@ export function useChat() {
     inputField.reset();
     setChatError(null);
     setChatLoading(false);
-    router.push(`/games/ai/${game.id}`);
+    window.history.pushState(null, "", `/games/ai/${game.id}`);
     if (window.innerWidth < 900) setSidebarOpen(false);
 
     inputRef.current?.focus();
@@ -577,6 +584,10 @@ export function useChat() {
   }, [game, visibleCount, refreshAllSessions]);
   useEffect(() => {
     if (!game || sending) return;
+    if (pendingNewChatPath.current) {
+      if (pathname !== pendingNewChatPath.current) return;
+      pendingNewChatPath.current = null;
+    }
 
     if (!routeChatId) {
       closeActiveStream();
@@ -598,6 +609,7 @@ export function useChat() {
   }, [
     game,
     routeChatId,
+    pathname,
     sending,
     activeSession?.id,
     selectSession,

@@ -15,18 +15,30 @@
 }
 
 .carousel-window {
+  --visible-count: 3;
   flex: 1;
-  overflow: hidden;
-  padding: 5px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
 }
 
 .carousel-track {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc(
+    (100% - (var(--visible-count) - 1) * 20px) / var(--visible-count)
+  );
+  gap: 20px;
 }
 
 .carousel-item {
   display: flex;
-  transition: transform var(--transition);
+  min-width: 0;
+  aspect-ratio: 1;
+  scroll-snap-align: start;
 }
 
 .carousel-indicators {
@@ -41,6 +53,9 @@
 }
 
 .indicator {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
   height: 20px;
   width: 5px;
   background: rgba(255, 255, 255, 0.8);
@@ -59,11 +74,32 @@
     transform: scale(1.15);
   }
 
-  carousel-item:hover {
+  .carousel-item:hover {
     transform: scale(1.03);
   }
 }
 
 .carousel-arrow:active {
   transform: scale(0.9);
+}
+
+.carousel-window::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@media (max-width: 749px), (min-width: 900px) and (max-width: 1199px) {
+  .carousel-window {
+    --visible-count: 2;
+  }
+}
+
+@media (max-width: 549px) {
+  .carousel-window {
+    --visible-count: 1;
+  }
 }

@@ -217,3 +217,9 @@
   width: 100%;
   box-sizing: border-box;
 }
+
+.header-inner,
+.header-center.header-mobile {
+  max-width: 1920px;
+  margin-inline: auto;
+}

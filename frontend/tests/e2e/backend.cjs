@@ -28,7 +28,17 @@ http
     const url = new URL(req.url, "http://127.0.0.1:8100");
     res.setHeader("Content-Type", "application/json");
     const send = (value) => res.end(JSON.stringify(value));
-    if (url.pathname === "/api/games/paged") return send(page([game]));
+    if (url.pathname === "/api/games/paged")
+      return send(
+        page(
+          Array.from({ length: 10 }, (_, index) => ({
+            ...game,
+            id: index + 7,
+            title: index === 0 ? game.title : `Игра ${index + 1}`,
+            imageFileTitle: "cover.svg",
+          })),
+        ),
+      );
     if (url.pathname === "/api/categories") return send([]);
     if (url.pathname === "/api/games/7") return send(game);
     if (url.pathname === "/api/auth/login")
@@ -41,6 +51,18 @@ http
       return send({ message: "Войдите в аккаунт" });
     }
     if (url.pathname === "/api/auth/me") return send(user);
+    if (url.pathname === "/api/chat/start")
+      return send({
+        id: 12,
+        title: "New chat",
+        lastUseTime: new Date().toISOString(),
+        messageDTOs: [],
+      });
+    if (url.pathname === "/api/chat/12/answer") {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.write("data:Первый ответ\n\n");
+      return setTimeout(() => res.end("event:done\ndata:ok\n\n"), 100);
+    }
     if (url.pathname === "/api/chat/paged") return send(page([]));
     if (url.pathname === "/api/models")
       return send([{ id: "test", name: "Test" }]);

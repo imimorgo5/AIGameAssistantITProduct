@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { emailError, passwordError, useAuth } from "entities/session";
+import { useAuth } from "entities/session";
 import { errorMessage } from "shared/lib/errors";
 import { useBlurField } from "shared/lib/forms";
 import { bindClasses } from "shared/lib/styles";
+import { validateEmail } from "shared/lib/utils";
+import { PasswordInput } from "shared/ui/password-input";
 
 import styles from "./AuthPages.module.scss";
 
@@ -14,13 +16,13 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const emailField = useBlurField(email, emailError);
-  const passwordField = useBlurField(password, passwordError);
+  const emailField = useBlurField(
+    email,
+    (value) => validateEmail(value).message,
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const isFormValid = Boolean(
-    email && password && !emailError(email) && !passwordError(password),
-  );
+  const isFormValid = Boolean(!validateEmail(email).message);
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isFormValid || submitting) return;
@@ -56,8 +58,6 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
             className={cx("auth-form-input")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            maxLength={50}
-            required
             aria-label="Введите e-mail"
             placeholder="Введите e-mail"
             autoComplete="email"
@@ -72,26 +72,17 @@ export default function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
 
         <div className={cx("auth-form-row")}>
-          <input
+          <PasswordInput
             id="login-password"
             name="password"
-            type="password"
             className={cx("auth-form-input")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            maxLength={30}
-            required
             aria-label="Введите пароль"
             placeholder="Введите пароль"
             autoComplete="current-password"
-            onBlur={passwordField.onBlur}
-            aria-invalid={!!passwordField.error || !!error}
+            aria-invalid={!!error}
           />
-          {passwordField.error && (
-            <div className={cx("field-error")} role="alert">
-              {passwordField.error}
-            </div>
-          )}
         </div>
       </div>
 

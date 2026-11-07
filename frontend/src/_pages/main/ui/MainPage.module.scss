@@ -103,3 +103,21 @@
   justify-content: center;
   padding: 70px 0;
 }
+
+.grid-container {
+  background: linear-gradient(
+    var(--hero-image-gradient-last-color),
+    var(--bg) 120px
+  );
+}
+
+.grid-top-controls,
+.games-area {
+  max-width: 1920px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+.grid-top-controls {
+  background: transparent;
+}

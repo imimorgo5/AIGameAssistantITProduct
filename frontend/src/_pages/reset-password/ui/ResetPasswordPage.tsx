@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { authStyles as style0 } from "features/auth";
 import { bindClasses } from "shared/lib/styles";
+import { PasswordInput } from "shared/ui/password-input";
 
 import { usePasswordReset } from "../model/usePasswordReset";
 
@@ -91,8 +92,7 @@ export default function ResetPasswordPage() {
                     ) : (
                       <>
                         <div className={cx("auth-form-row")}>
-                          <input
-                            type="password"
+                          <PasswordInput
                             className={cx("auth-form-input")}
                             value={password}
                             onChange={handlePasswordChange}
@@ -110,8 +110,7 @@ export default function ResetPasswordPage() {
                           )}
                         </div>
                         <div className={cx("auth-form-row")}>
-                          <input
-                            type="password"
+                          <PasswordInput
                             className={cx("auth-form-input")}
                             value={passwordAgain}
                             onChange={handlePasswordAgainChange}

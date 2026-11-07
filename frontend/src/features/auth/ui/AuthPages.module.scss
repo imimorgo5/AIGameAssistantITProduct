@@ -295,3 +295,8 @@
 .auth-logo-link {
   display: inline-flex;
 }
+
+.auth-root > :not(.auth-bg) {
+  max-width: 1920px;
+  margin-inline: auto;
+}

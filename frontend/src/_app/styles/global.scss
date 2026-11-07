@@ -395,3 +395,14 @@ textarea[aria-invalid="true"],
   ):active {
   translate: 0 1px;
 }
+
+.page-shell {
+  width: 100%;
+}
+
+html:has([data-chat-page]),
+body:has([data-chat-page]) {
+  height: 100dvh;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
