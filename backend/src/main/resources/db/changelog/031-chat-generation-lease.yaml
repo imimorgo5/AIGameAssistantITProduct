@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 39-chat-generation-lease
+      author: aigameassistant
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE chat ADD COLUMN generation_until TIMESTAMP WITH TIME ZONE;
+              ALTER TABLE chat ADD COLUMN generation_token VARCHAR(36);
+              CREATE INDEX rule_document_queue ON rule_document(status,updated_at);

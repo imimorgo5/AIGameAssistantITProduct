@@ -34,7 +34,13 @@
   transition:
     background-color var(--transition),
     border-color var(--transition),
-    color var(--transition);
+    color var(--transition),
+    opacity var(--transition);
+}
+
+.seldd-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .seldd-root[data-appearance="compact"] .seldd-button,

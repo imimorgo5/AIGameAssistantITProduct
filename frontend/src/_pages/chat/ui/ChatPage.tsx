@@ -12,14 +12,21 @@ import { Header } from "widgets/header";
 import style0 from "./ChatPage.module.scss";
 import RulesIcon from "./RulesIcon";
 import { useChat } from "../model/useChat";
-export default function ChatPage() {
+export default function ChatPage({ guest = false }: { guest?: boolean }) {
   const segments = usePathname().split("/").slice(3);
-  return <ChatContent key={segments[0] ?? "none"} />;
+  return (
+    <ChatContent key={`${segments[0] ?? "none"}:${guest}`} guest={guest} />
+  );
 }
 
-function ChatContent() {
+function ChatContent({ guest }: { guest: boolean }) {
   const {
     currentUser,
+    guestStatus,
+    rulesState,
+    refreshRules,
+    guestNotice,
+    inputLimit,
     gameLoading,
     error,
     game,
@@ -57,7 +64,7 @@ function ChatContent() {
     rulesSidebarOpen,
     confirmState,
     setConfirmState,
-  } = useChat();
+  } = useChat(guest);
 
   return (
     <div className={cx("chat-root")} data-chat-page>
@@ -81,14 +88,14 @@ function ChatContent() {
           <ModelSelect
             value={selectedModel}
             onChange={handleChangeModel}
-            disabled={modelChanging || sending}
+            disabled={guest || modelChanging || sending}
           />
         </div>
       )}
 
       {!gameLoading && !loading && !error && (
         <div className={cx("chat-container")}>
-          {game && (
+          {!guest && game && (
             <button
               className={cx(`sidebar-toggle ${sidebarOpen ? "hidden" : ""}`)}
               onClick={() => {
@@ -109,7 +116,7 @@ function ChatContent() {
               </svg>
             </button>
           )}
-          {game && (
+          {!guest && game && (
             <aside
               className={cx(
                 `chat-sidebar sessions-sidebar ${sidebarOpen ? "open" : ""}`,
@@ -229,6 +236,85 @@ function ChatContent() {
             ) : (
               <div className={cx("chat-main-inner")}>
                 <div className={cx("chat-dialog-container")}>
+                  {guest && (
+                    <div className={cx("guest-banner")}>
+                      <div>
+                        <strong>
+                          {guestStatus
+                            ? `Осталось вопросов на сегодня: ${guestStatus.remaining} из ${guestStatus.limit}`
+                            : "Гостевой лимит недоступен"}
+                        </strong>
+                        {guestStatus && (
+                          <p>
+                            Лимит обновится{" "}
+                            {new Date(guestStatus.resetsAt).toLocaleString(
+                              "ru-RU",
+                              {
+                                day: "numeric",
+                                month: "long",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </p>
+                        )}
+                        <p>
+                          Зарегистрируйтесь, чтобы задавать вопросы без дневного
+                          лимита.
+                        </p>
+                      </div>
+                      <div className={cx("guest-actions")}>
+                        <button
+                          type="button"
+                          className={cx("btn btn-ghost guest-clear")}
+                          disabled={sending || messages.length === 0}
+                          title="Начать пустой диалог по этой игре. Дневной лимит сохранится."
+                          onClick={() =>
+                            setConfirmState({
+                              open: true,
+                              text: "Очистить гостевую историю в этом браузере? Лимит вопросов не сбросится.",
+                              onConfirm: async () => {
+                                handleNewChat();
+                                setConfirmState({ open: false });
+                              },
+                            })
+                          }
+                        >
+                          Очистить историю
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {rulesState?.status !== "ready" && (
+                    <p className={cx("guest-notice")} role="status">
+                      {!rulesState
+                        ? "Проверяем правила..."
+                        : ["pending", "processing"].includes(rulesState.status)
+                          ? "Правила обрабатываются. Чат станет доступен после подготовки PDF / OCR."
+                          : rulesState.error || "Правила недоступны"}{" "}
+                      {rulesState?.status === "unavailable" && (
+                        <button
+                          type="button"
+                          className={cx("link guest-clear")}
+                          onClick={refreshRules}
+                        >
+                          Повторить проверку
+                        </button>
+                      )}
+                    </p>
+                  )}
+                  {guestNotice && (
+                    <p className={cx("guest-notice")} role="alert">
+                      {guestNotice}
+                    </p>
+                  )}
+                  {guest && guestStatus?.remaining === 0 && (
+                    <p className={cx("guest-notice")} role="status">
+                      Лимит на сегодня исчерпан. Зарегистрируйтесь или вернитесь
+                      после{" "}
+                      {new Date(guestStatus.resetsAt).toLocaleString("ru-RU")}.
+                    </p>
+                  )}
                   {chatError && (
                     <div className={cx("chat-muted")}>{chatError}</div>
                   )}
@@ -262,7 +348,7 @@ function ChatContent() {
                           className={cx("chat-input")}
                           placeholder="Задайте вопрос по игре..."
                           value={input}
-                          maxLength={10000}
+                          maxLength={inputLimit}
                           onBlur={inputField.onBlur}
                           aria-invalid={!!inputField.error}
                           aria-describedby={
@@ -273,7 +359,12 @@ function ChatContent() {
                           }}
                           onKeyDown={handleKeyDown}
                           rows={1}
-                          disabled={!game}
+                          disabled={
+                            !game ||
+                            sending ||
+                            (guest &&
+                              (!guestStatus || guestStatus.remaining <= 0))
+                          }
                           aria-label="Текст сообщения"
                         />
                         {inputField.error && (
@@ -292,8 +383,11 @@ function ChatContent() {
                         disabled={
                           sending ||
                           modelChanging ||
+                          rulesState?.status !== "ready" ||
                           !input.trim() ||
-                          input.length > 10000 ||
+                          input.length > inputLimit ||
+                          (guest &&
+                            (!guestStatus || guestStatus.remaining <= 0)) ||
                           !game
                         }
                         aria-label="Отправить"
@@ -383,7 +477,7 @@ function ChatContent() {
               className={cx("btn btn-danger")}
               onClick={confirmState.onConfirm}
             >
-              Удалить
+              {guest ? "Очистить" : "Удалить"}
             </button>
           </ModalActions>
         </Modal>

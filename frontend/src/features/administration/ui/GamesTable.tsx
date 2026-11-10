@@ -3,6 +3,7 @@ import { originalFileName } from "shared/lib/utils";
 
 import style0 from "./AdminLayout.module.scss";
 import style1 from "./AdminTable.module.scss";
+import RulesPreparation from "./RulesPreparation";
 
 import type { Game } from "entities/game";
 import type { Dispatch, SetStateAction } from "react";
@@ -96,6 +97,12 @@ export default function GamesTable({
                     </button>
                   ) : (
                     "-"
+                  )}
+                  {g.rulesFileTitle && (
+                    <RulesPreparation
+                      key={`${g.id}:${g.rulesFileTitle}`}
+                      gameId={g.id}
+                    />
                   )}
                 </td>
                 <td>

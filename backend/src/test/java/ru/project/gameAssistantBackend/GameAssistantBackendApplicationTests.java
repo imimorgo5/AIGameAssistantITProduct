@@ -14,8 +14,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 		"spring.datasource.driver-class-name=org.h2.Driver",
 		"spring.datasource.username=sa",
 		"spring.datasource.password=",
-		"spring.liquibase.enabled=false",
-		"spring.jpa.hibernate.ddl-auto=create-drop",
+		"spring.liquibase.enabled=true",
+		"spring.jpa.hibernate.ddl-auto=none",
 		"jwt.secret.access=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
 		"jwt.secret.refresh=AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ==",
 		"app.admin.email=",
@@ -40,5 +40,13 @@ class GameAssistantBackendApplicationTests {
 	@Test
 	void contextLoads() {
 	}
+
+    @Test
+    void exposesCurrentModelInGuestStatusWithoutAuthentication() throws Exception {
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/guest/status"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.modelId").value("test"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.remaining").value(5));
+    }
 
 }

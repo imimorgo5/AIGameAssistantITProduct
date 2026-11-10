@@ -51,7 +51,7 @@ export default function Header({
         `site-header ${appearance} ${scrolledPastHero ? "scrolled-past-hero" : ""}`,
       )}
     >
-      <div className={cx("header-inner")}>
+      <div className={cx(`header-inner ${centralTitle ? "title-layout" : ""}`)}>
         <div className={cx("header-left")}>
           <Link href="/" className={cx("logo")}>
             <Image

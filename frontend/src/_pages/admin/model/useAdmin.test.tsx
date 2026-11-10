@@ -1,7 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useSearchParams } from "next/navigation";
 
-import { modelApi } from "entities/ai";
 import { categoryApi, gameApi } from "entities/game";
 import { userApi } from "entities/session";
 
@@ -25,7 +24,6 @@ test("restores the settings tab from the URL and keeps other parameters on switc
     imageFileTitle: null,
     model: null,
   });
-  jest.spyOn(modelApi, "getMain").mockResolvedValue("fast");
   jest.spyOn(gameApi, "getAllPaged").mockResolvedValue({
     content: [],
     totalElements: 0,
@@ -43,7 +41,7 @@ test("restores the settings tab from the URL and keeps other parameters on switc
   );
 
   expect(result.current.admin.activeTab).toBe("settings");
-  await waitFor(() => expect(result.current.admin.selectedModel).toBe("fast"));
+  await waitFor(() => expect(result.current.admin.loading).toBe(false));
   act(() => result.current.admin.switchTab("games"));
   expect("?" + result.current.location.toString()).toBe("?tab=games&keep=1");
   await waitFor(() => expect(result.current.admin.itemsLoading).toBe(false));

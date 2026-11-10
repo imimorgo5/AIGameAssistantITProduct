@@ -1,5 +1,28 @@
 import { expect, test } from "@playwright/test";
 
+import { parseModelRegistry } from "entities/ai";
+
+import type { APIRequestContext } from "@playwright/test";
+
+async function seedModels(request: APIRequestContext) {
+  await request.post("/api/auth/login", {
+    data: { email: "admin@example.com", password: "password" },
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+  const response = await request.post("/api/models", {
+    data: { remoteId: "test/one", name: "Test One", maxOutputTokens: 4096 },
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+  expect([201, 409]).toContain(response.status());
+  await request.post("/api/auth/logout", {
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+}
+
+test.beforeAll(async ({ request }) => {
+  await seedModels(request);
+});
+
 test("renders catalog HTML on the server and hydrates without errors", async ({
   page,
   request,
@@ -46,7 +69,7 @@ test("protects routes on the server and hides tokens from browser JavaScript", a
   page,
   context,
 }) => {
-  for (const path of ["/profile", "/admin", "/games/ai/7"]) {
+  for (const path of ["/profile", "/admin", "/games/ai/7/12"]) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login$/);
   }
@@ -94,13 +117,32 @@ test("keeps the first streamed answer and fits the chat in the viewport", async 
     headers: { "X-Requested-With": "XMLHttpRequest" },
   });
   await page.goto("/games/ai/7");
+  const titleBounds = await page
+    .getByRole("heading", { name: "Тестовая игра", exact: true })
+    .boundingBox();
+  expect(titleBounds).not.toBeNull();
+  if (titleBounds)
+    expect(
+      Math.abs(
+        titleBounds.x +
+          titleBounds.width / 2 -
+          (page.viewportSize()?.width ?? 0) / 2,
+      ),
+    ).toBeLessThan(2);
+
   await page
     .getByRole("textbox", { name: "Текст сообщения" })
     .fill("Первый вопрос");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
-  await expect(page.getByText("Первый ответ", { exact: true })).toBeVisible();
-  await expect(page).toHaveURL(/\/games\/ai\/7\/12$/);
-  await expect(page.getByText("Первый вопрос", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/games\/ai\/7\/\d+$/);
+  await expect(
+    page.getByRole("main").getByText("Первый вопрос", { exact: true }),
+  ).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     height: window.innerHeight,
     page: document.documentElement.scrollHeight,
@@ -122,7 +164,11 @@ test("keeps the first streamed answer and fits the chat in the viewport", async 
   await expect(
     page.getByText("Чем я могу помочь?", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("Первый ответ", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
 });
 
 test("limits regular pages to 1920 pixels", async ({ page }) => {
@@ -307,6 +353,19 @@ test("aligns both mobile chat drawers with their opening buttons", async ({
     headers: { "X-Requested-With": "XMLHttpRequest" },
   });
   await page.goto("/games/ai/7");
+  const titleBounds = await page
+    .getByRole("heading", { name: "Тестовая игра", exact: true })
+    .boundingBox();
+  expect(titleBounds).not.toBeNull();
+  if (titleBounds)
+    expect(
+      Math.abs(
+        titleBounds.x +
+          titleBounds.width / 2 -
+          (page.viewportSize()?.width ?? 0) / 2,
+      ),
+    ).toBeLessThan(2);
+
   const sessionsButton = page.getByRole("button", {
     name: "Открыть список чатов",
   });
@@ -365,6 +424,19 @@ for (const width of [390, 768]) {
       }),
     );
     await page.goto("/games/ai/7");
+    const titleBounds = await page
+      .getByRole("heading", { name: "Игра", exact: true })
+      .boundingBox();
+    expect(titleBounds).not.toBeNull();
+    if (titleBounds)
+      expect(
+        Math.abs(
+          titleBounds.x +
+            titleBounds.width / 2 -
+            (page.viewportSize()?.width ?? 0) / 2,
+        ),
+      ).toBeLessThan(2);
+
     const opener = page.getByRole("button", {
       name: "Открыть правила",
       exact: true,
@@ -413,6 +485,19 @@ test("keeps model selection compact until the mobile layout moves it below the d
   });
   await page.setViewportSize({ width: 690, height: 900 });
   await page.goto("/games/ai/7");
+  const titleBounds = await page
+    .getByRole("heading", { name: "Тестовая игра", exact: true })
+    .boundingBox();
+  expect(titleBounds).not.toBeNull();
+  if (titleBounds)
+    expect(
+      Math.abs(
+        titleBounds.x +
+          titleBounds.width / 2 -
+          (page.viewportSize()?.width ?? 0) / 2,
+      ),
+    ).toBeLessThan(2);
+
   const model = page.getByRole("button", { name: "Модель нейросети" });
   await expect(model).toBeVisible();
   await expect
@@ -446,4 +531,206 @@ test("keeps model selection compact until the mobile layout moves it below the d
       .evaluate((element) => element.getBoundingClientRect().bottom);
     expect(modelTop).toBeGreaterThanOrEqual(openerBottom);
   }
+});
+
+test("manages OpenRouter models in the settings table with blur validation", async ({
+  page,
+  context,
+}, testInfo) => {
+  await context.request.post("/api/auth/login", {
+    data: { email: "admin@example.com", password: "password" },
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+  const registry = parseModelRegistry(
+    await (await context.request.get("/api/models/registry")).json(),
+  );
+  for (const model of registry.models.filter(
+    (model) => model.remoteId === "test/two",
+  )) {
+    await context.request.delete(`/api/models/${model.id}`, {
+      headers: { "X-Requested-With": "XMLHttpRequest" },
+    });
+  }
+  await page.route("**/api/models/catalog", (route) =>
+    route.fulfill({
+      json: [
+        { id: "test/one", name: "Test One", maxOutputTokens: 8192 },
+        { id: "test/two", name: "Test Two", maxOutputTokens: 4096 },
+        ...Array.from({ length: 100 }, (_, index) => ({
+          id: `catalog/model-${index}`,
+          name: `Catalog model ${index}`,
+          maxOutputTokens: 4096,
+        })),
+      ],
+    }),
+  );
+  await page.goto("/admin?tab=settings");
+  await page.getByRole("button", { name: "Добавить модель" }).click();
+  const form = page.getByRole("dialog");
+  await expect(
+    form.getByText("Обязательное поле", { exact: true }),
+  ).toHaveCount(0);
+  await form.getByLabel("Название", { exact: true }).focus();
+  await form.getByLabel("Название", { exact: true }).blur();
+  await expect(
+    form.getByText("Обязательное поле", { exact: true }),
+  ).toBeVisible();
+  const field = form.getByRole("combobox", { name: "Модель OpenRouter" });
+  const heightBefore = await form.evaluate((element) => element.scrollHeight);
+  await field.focus();
+  const list = form.getByRole("listbox", { name: "Модели OpenRouter" });
+  await expect(list).toBeVisible();
+  expect(
+    await list.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeLessThanOrEqual(220);
+  expect(await form.evaluate((element) => element.scrollHeight)).toBe(
+    heightBefore,
+  );
+  await field.press("Escape");
+  await expect(list).not.toBeVisible();
+  await expect(form).toBeVisible();
+  await field.fill("test/two");
+  await form.getByRole("option", { name: "Test Two" }).click();
+  await form.getByLabel("Лимит ответа", { exact: true }).fill("12");
+  await form.getByLabel("Лимит ответа", { exact: true }).blur();
+  await expect(
+    form.getByText("Укажите целое число от 256 до 32768"),
+  ).toBeVisible();
+  await expect(
+    form.getByRole("button", { name: "Добавить", exact: true }),
+  ).toBeDisabled();
+  await form.getByLabel("Лимит ответа", { exact: true }).fill("1024");
+  await page.screenshot({
+    path: testInfo.outputPath("model-form.png"),
+    fullPage: true,
+  });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).not.toHaveClass(/theme-transition/);
+  await page.screenshot({
+    path: testInfo.outputPath("model-form-dark.png"),
+    fullPage: true,
+  });
+  await form.getByRole("button", { name: "Добавить", exact: true }).click();
+  await expect(form).not.toBeVisible();
+  const second = page.getByRole("row").filter({ hasText: "test/two" });
+  await second.getByRole("button", { name: "Выбрать", exact: true }).click();
+  await expect(
+    second.getByRole("button", { name: "Основная", exact: true }),
+  ).toBeVisible();
+  await second.getByRole("checkbox", { name: "Включить Test Two" }).click();
+  await expect(second.getByRole("checkbox")).not.toBeChecked();
+  await expect(
+    page
+      .getByRole("row")
+      .filter({ hasText: "test/one" })
+      .getByRole("button", { name: "Основная", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("models-table.png"),
+    fullPage: true,
+  });
+  await second.getByRole("button", { name: "Удалить Test Two" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Удалить", exact: true })
+    .click();
+  await expect(second).toHaveCount(0);
+});
+
+test("supports a guest answer, local persistence, clear history and server-side quota", async ({
+  page,
+  context,
+}, testInfo) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  let systemModelRequests = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/system/model")
+      systemModelRequests++;
+  });
+  await page.goto("/games/ai/7");
+  const titleBounds = await page
+    .getByRole("heading", { name: "Тестовая игра", exact: true })
+    .boundingBox();
+  expect(titleBounds).not.toBeNull();
+  if (titleBounds)
+    expect(
+      Math.abs(
+        titleBounds.x +
+          titleBounds.width / 2 -
+          (page.viewportSize()?.width ?? 0) / 2,
+      ),
+    ).toBeLessThan(2);
+
+  await expect(
+    page.getByText(
+      "Зарегистрируйтесь, чтобы задавать вопросы без дневного лимита.",
+    ),
+  ).toBeVisible();
+  const modelSelector = page.getByRole("button", { name: "Модель нейросети" });
+  await expect(modelSelector).toBeDisabled();
+  await expect(modelSelector).not.toContainText("Выберите модель");
+  await expect(
+    page.getByRole("link", { name: "Регистрация", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "Текст сообщения" }),
+  ).toHaveAttribute("maxlength", "1000");
+  await page
+    .getByRole("textbox", { name: "Текст сообщения" })
+    .fill("Как проходит ход?");
+  await page.getByRole("button", { name: "Отправить", exact: true }).click();
+  await expect(
+    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Осталось вопросов на сегодня: 4 из 5"),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByText("Как проходит ход?", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("guest-chat.png"),
+    fullPage: true,
+  });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator("html")).not.toHaveClass(/theme-transition/);
+  await page.screenshot({
+    path: testInfo.outputPath("guest-chat-dark.png"),
+    fullPage: true,
+  });
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).not.toHaveClass(/theme-transition/);
+  await page.getByRole("button", { name: "Очистить историю" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Очистить", exact: true })
+    .click();
+  await expect(
+    page.getByText("Как проходит ход?", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Осталось вопросов на сегодня: 4 из 5"),
+  ).toBeVisible();
+  const before = await (await context.request.get("/api/guest/status")).json();
+  const response = await context.request.post("/api/guest/answer", {
+    data: { gameId: 7, prompt: "Ещё вопрос", history: [] },
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+  expect(response.status()).toBe(429);
+  const after = await (await context.request.get("/api/guest/status")).json();
+  expect(after.remaining).toBe(before.remaining);
+  expect(systemModelRequests).toBe(0);
+  expect(errors).toEqual([]);
 });

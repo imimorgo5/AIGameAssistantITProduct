@@ -1,7 +1,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { modelApi } from "entities/ai";
 import { categoryApi, gameApi } from "entities/game";
 import { useAuth, userApi } from "entities/session";
 import { fileApi } from "shared/api/file";
@@ -47,7 +46,6 @@ export function useAdmin() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 280);
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [viewerState, setViewerState] = useState<ViewerState>({
     open: false,
     fileType: null,
@@ -119,11 +117,6 @@ export function useAdmin() {
           if (requestId !== dataRequest.current) return;
 
           setCategories([...allCategories].sort((a, b) => a?.id - b?.id) || []);
-        } else if (tabToUse === "settings") {
-          const currentModel = await modelApi.getMain();
-          if (requestId !== dataRequest.current) return;
-
-          setSelectedModel(currentModel || null);
         }
 
         if (requestId !== dataRequest.current) return;
@@ -422,25 +415,12 @@ export function useAdmin() {
     });
   };
 
-  const handleChangeModel = async (newModel: string) => {
-    try {
-      if (!newModel) return;
-
-      await modelApi.updateMain(newModel);
-      setSelectedModel(newModel);
-    } catch (cause) {
-      alert(errorMessage(cause, "Не удалось изменить модель."));
-    }
-  };
-
   return {
     loading,
     error,
     activeTab,
     switchTab,
     logout,
-    selectedModel,
-    handleChangeModel,
     search,
     setSearch,
     setPage,

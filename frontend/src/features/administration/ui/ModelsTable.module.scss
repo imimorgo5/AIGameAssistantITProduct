@@ -1,0 +1,23 @@
+.models-error {
+  color: var(--danger);
+  font-size: 14px;
+  margin-block: 12px;
+}
+
+.model-identifier {
+  overflow-wrap: anywhere;
+  max-width: 280px;
+  white-space: normal;
+}
+
+.rules-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 280px;
+  white-space: normal;
+  color: var(--muted-text);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

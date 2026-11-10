@@ -98,9 +98,7 @@ public class UserServiceImpl implements UserServiceI {
 
     @Transactional
     public void updateModel(User user, String model) {
-        catalog.requireEnabled(model);
-        user.setModel(model);
-        userRepository.save(user);
+        catalog.updatePreference(user.getId(), model);
     }
 
     @Transactional

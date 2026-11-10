@@ -23,6 +23,7 @@ public class Chat extends BaseEntity{
     private Instant lastUseTime;
 
     @OneToMany(mappedBy="chat", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("timestamp ASC, id ASC")
     private List<Message> messages = new ArrayList<>();
 
     public Chat(Long id, String title, Instant lastUsedTime, User uzer, List<Message> messages) {

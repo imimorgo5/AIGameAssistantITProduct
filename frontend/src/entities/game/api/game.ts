@@ -1,5 +1,5 @@
 import { ignoreResponse, mutate, read } from "shared/api/http";
-import { page } from "shared/lib/validation";
+import { page, record, text } from "shared/lib/validation";
 
 import { parseGame } from "../model/types";
 
@@ -17,6 +17,20 @@ function form(input: GameInput): FormData {
 }
 
 export const gameApi = {
+  rulesStatus: (id: number) =>
+    read(
+      `/api/games/${id}/rules/status`,
+      (value) => {
+        const data = record(value);
+        return { status: text(data.status), error: text(data.error) };
+      },
+      {},
+      0,
+    ),
+  retryRules: (id: number) =>
+    mutate("post", `/api/games/${id}/rules/retry`, undefined, ignoreResponse, [
+      "rules",
+    ]),
   create: (input: GameInput) =>
     mutate("post", "/api/games", form(input), parseGame, [
       "games",

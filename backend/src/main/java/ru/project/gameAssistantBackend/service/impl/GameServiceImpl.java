@@ -9,6 +9,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import ru.project.gameAssistantBackend.ai.RulesService;
 import ru.project.gameAssistantBackend.dto.game.GameRequestDTO;
 import ru.project.gameAssistantBackend.exception.customEx.notFound.CategoryNotFoundException;
 import ru.project.gameAssistantBackend.exception.customEx.notFound.GameNotFoundException;
@@ -29,7 +31,7 @@ public class GameServiceImpl implements GameServiceI {
 
     private final FileServiceImpl fileServiceImpl;
 
-    private final Converter converter;
+    private final RulesService rules;
 
     private final CategoryService categoryService;
 
@@ -39,31 +41,44 @@ public class GameServiceImpl implements GameServiceI {
     public GameServiceImpl(
             GameRepository gameRepository,
             FileServiceImpl fileServiceImpl,
-            Converter converter,
+            RulesService rules,
             CategoryService categoryService,
             GameSpecification gameSpecification) {
         this.gameRepository = gameRepository;
         this.fileServiceImpl = fileServiceImpl;
-        this.converter = converter;
+        this.rules = rules;
         this.categoryService = categoryService;
         this.gameSpecification = gameSpecification;
     }
 
     public Page<Game> getPagedGames(
-            int page, int size, String filter, String category, String sortBy, Sort.Direction direction) {
+            int page,
+            int size,
+            String filter,
+            String category,
+            String sortBy,
+            Sort.Direction direction) {
         Set<String> allowed = Set.of("id", "title");
         if (!allowed.contains(sortBy)) sortBy = "title";
 
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, Math.min(size, 1000), sort);
-        Specification<Game> spec = gameSpecification.titleOrDescriptionContains(filter)
-                .and(gameSpecification.hasCategory(category));
+        Specification<Game> spec =
+                gameSpecification
+                        .titleOrDescriptionContains(filter)
+                        .and(gameSpecification.hasCategory(category));
 
         return gameRepository.findAll(spec, pageable);
     }
 
     public Page<Game> getPagedFavouriteGames(
-            User user, int page, int size, String filter, String category, String sortBy, Sort.Direction direction) {
+            User user,
+            int page,
+            int size,
+            String filter,
+            String category,
+            String sortBy,
+            Sort.Direction direction) {
         Set<String> allowed = Set.of("id", "title");
         if (!allowed.contains(sortBy)) {
             sortBy = "title";
@@ -72,21 +87,23 @@ public class GameServiceImpl implements GameServiceI {
         Sort sort = Sort.by(direction, sortBy);
         Pageable pageable = PageRequest.of(page, Math.min(size, 1000), sort);
 
-        Specification<Game> spec = gameSpecification.titleOrDescriptionContains(filter)
-                .and(gameSpecification.hasCategory(category))
-                .and(gameSpecification.isFavouriteOf(user));
+        Specification<Game> spec =
+                gameSpecification
+                        .titleOrDescriptionContains(filter)
+                        .and(gameSpecification.hasCategory(category))
+                        .and(gameSpecification.isFavouriteOf(user));
 
         return gameRepository.findAll(spec, pageable);
     }
 
-
-    public List<Game> getAllGames(){
+    public List<Game> getAllGames() {
         return gameRepository.findAll();
     }
 
     @Override
     public Game getGameById(Long id) throws GameNotFoundException {
-        return gameRepository.findById(id)
+        return gameRepository
+                .findById(id)
                 .orElseThrow(() -> new GameNotFoundException("Игра с таким id не найдена"));
     }
 
@@ -109,7 +126,7 @@ public class GameServiceImpl implements GameServiceI {
         String rulesFileTitle = fileServiceImpl.save(rulesFile);
         game.setRulesFileTitle(rulesFileTitle);
         try {
-            converter.pdfToMd(rulesFileTitle);
+            rules.enqueue(rulesFileTitle);
         } catch (IllegalArgumentException e) {
             fileServiceImpl.delete(rulesFileTitle);
             fileServiceImpl.delete(imageFileTitle);
@@ -123,22 +140,22 @@ public class GameServiceImpl implements GameServiceI {
     public Game update(Long id, GameRequestDTO gameRequestDTO)
             throws GameNotFoundException, CategoryNotFoundException {
         Game game = getGameById(id);
-        if(gameRequestDTO.title() != null) {
+        if (gameRequestDTO.title() != null) {
             game.setTitle(gameRequestDTO.title());
         }
 
-        if(gameRequestDTO.description() != null) {
+        if (gameRequestDTO.description() != null) {
             game.setDescription(gameRequestDTO.description());
         }
 
         List<String> categoryNames = gameRequestDTO.categories();
-        if(categoryNames != null){
+        if (categoryNames != null) {
             Set<Category> categories = categoryService.getCategories(categoryNames);
             game.setCategories(categories);
         }
 
         MultipartFile newImageFile = gameRequestDTO.imageFile();
-        if(newImageFile != null && !newImageFile.isEmpty()){
+        if (newImageFile != null && !newImageFile.isEmpty()) {
             String oldImageFileTitle = game.getImageFileTitle();
             String newImageFileTitle = fileServiceImpl.save(newImageFile);
             fileServiceImpl.delete(oldImageFileTitle);
@@ -146,11 +163,11 @@ public class GameServiceImpl implements GameServiceI {
         }
 
         MultipartFile newRulesFile = gameRequestDTO.rulesFile();
-        if(newRulesFile != null && !newRulesFile.isEmpty()){
+        if (newRulesFile != null && !newRulesFile.isEmpty()) {
             String oldRulesFileTitle = game.getRulesFileTitle();
             String newRulesFileTitle = fileServiceImpl.save(newRulesFile);
             try {
-                converter.pdfToMd(newRulesFileTitle);
+                rules.enqueue(newRulesFileTitle);
             } catch (IllegalArgumentException e) {
                 fileServiceImpl.delete(newRulesFileTitle);
                 throw e;
@@ -180,7 +197,7 @@ public class GameServiceImpl implements GameServiceI {
         gameRepository.delete(game);
     }
 
-    public long getCountByCategory(Category category){
+    public long getCountByCategory(Category category) {
         return gameRepository.countByCategories_Name(category.getName());
     }
 }

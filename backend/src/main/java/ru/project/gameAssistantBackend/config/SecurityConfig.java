@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/files/**",
                                 "/api/models",
+                                "/api/guest/**",
                                 "/api/auth/login",
                                 "/api/auth/logout",
                                 "/api/auth/token",

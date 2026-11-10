@@ -53,6 +53,9 @@ jwt:
     refresh: ${JWT_SECRET_REFRESH}
 
 ai:
+  guest:
+    daily-budget: ${GUEST_DAILY_BUDGET:200}
+    client-ip-header: ${GUEST_CLIENT_IP_HEADER:}
   openrouter:
     api-key: ${OPENROUTER_API_KEY:}
     base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}

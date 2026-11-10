@@ -2,12 +2,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { modelApi } from "entities/ai";
-import { chatApi } from "entities/chat";
-import { gameApi } from "entities/game";
+import { chatApi, guestLimits } from "entities/chat";
+import { gameApi, useRulesStatus } from "entities/game";
 import { userApi } from "entities/session";
 import { errorMessage } from "shared/lib/errors";
 import { textError, useBlurField } from "shared/lib/forms";
 import { useMediaQuery, useStableCallback } from "shared/lib/react";
+
+import { useGuestChat } from "./useGuestChat";
 
 import type { Message, Session } from "entities/chat";
 import type { Game } from "entities/game";
@@ -84,13 +86,15 @@ function groupSessionsByTime(sessions: Session[]): [string, Session[]][] {
   return final;
 }
 
-export function useChat() {
+export function useChat(guest = false) {
   const router = useRouter();
   const pathname = usePathname();
   const segments = pathname.split("/").slice(3);
   const pendingNewChatPath = useRef<string | null>(null);
   const routeGameId = segments[0];
   const routeChatId = segments[1];
+  const guestChat = useGuestChat(routeGameId, guest);
+  const inputLimit = guest ? guestLimits.input : 10000;
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [gameLoading, setGameLoading] = useState(true);
@@ -100,6 +104,7 @@ export function useChat() {
   const [modelChanging, setModelChanging] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [game, setGame] = useState<Game | null>(null);
+  const rulesPreparation = useRulesStatus(game?.id);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -108,7 +113,7 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const inputField = useBlurField(input, (value) =>
-    textError(value, 10000, false),
+    textError(value, inputLimit, false),
   );
   const [sending, setSending] = useState(false);
   const desktop = useMediaQuery("(min-width: 900px)");
@@ -119,6 +124,13 @@ export function useChat() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (guest)
+      messagesRef.current?.scrollTo({
+        top: messagesRef.current.scrollHeight,
+        behavior: "auto",
+      });
+  }, [guest, guestChat.messages]);
   const mounted = useRef(true);
   useEffect(() => {
     mounted.current = true;
@@ -146,6 +158,10 @@ export function useChat() {
   const sessionRequest = useRef(0);
   const refreshAllSessions = useStableCallback(
     async (useGame: Game | null = game, isLoadMore = false) => {
+      if (guest) {
+        setChatsLoading(false);
+        return;
+      }
       const requestId = ++sessionRequest.current;
       if (isLoadMore) setLoadingMore(true);
       else setChatsLoading(true);
@@ -179,9 +195,9 @@ export function useChat() {
 
         setAbsoluteCount(previews?.totalElements || 0);
         setError(null);
-      } catch {
+      } catch (cause) {
         mapped = [];
-        setError("Ошибка при загрузке чатов");
+        setError(errorMessage(cause, "Ошибка при загрузке чатов"));
       } finally {
         if (mounted.current && requestId === sessionRequest.current) {
           if (isLoadMore) setLoadingMore(false);
@@ -225,19 +241,27 @@ export function useChat() {
   useEffect(() => {
     let mounted = true;
     (async () => {
+      if (guest) {
+        setLoading(false);
+        return;
+      }
       try {
         const user = await userApi.getAuthenticated();
         if (!mounted) return;
 
         setCurrentUser(user);
-        if (user.model) {
-          setSelectedModel(user.model);
-        } else {
-          const userModel = await modelApi.getMain();
-          setSelectedModel(userModel || null);
-        }
-      } catch {
-        setError("Ошибка при получении данных пользователя");
+        const [available, defaultModel] = await Promise.all([
+          modelApi.getAll(),
+          modelApi.getMain(),
+        ]);
+        const userModel = available.some((model) => model.id === user.model)
+          ? user.model
+          : defaultModel;
+        if (mounted) setSelectedModel(userModel || null);
+      } catch (cause) {
+        setError(
+          errorMessage(cause, "Ошибка при получении данных пользователя"),
+        );
         if (!mounted) return;
 
         setCurrentUser(null);
@@ -250,7 +274,7 @@ export function useChat() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [guest]);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -266,8 +290,8 @@ export function useChat() {
 
         setGame(g || null);
         setError(null);
-      } catch {
-        setError("Ошибка при загрузке чатов");
+      } catch (cause) {
+        setError(errorMessage(cause, "Ошибка при загрузке игры"));
         if (mounted) setGame(null);
       } finally {
         setGameLoading(false);
@@ -407,7 +431,21 @@ export function useChat() {
   });
 
   const handleSend = async () => {
-    if (!game || sending || modelChanging || textError(input, 10000)) return;
+    if (
+      !game ||
+      rulesPreparation.state?.status !== "ready" ||
+      sending ||
+      modelChanging ||
+      textError(input, inputLimit)
+    )
+      return;
+    if (guest) {
+      if (guestChat.send(input)) {
+        inputField.reset();
+        setInput("");
+      }
+      return;
+    }
 
     const text = input;
     inputField.reset();
@@ -544,6 +582,12 @@ export function useChat() {
   };
 
   const handleNewChat = () => {
+    if (guest) {
+      guestChat.clear();
+      setInput("");
+      inputField.reset();
+      return;
+    }
     if (!game || sending || chatLoading) return;
 
     pendingNewChatPath.current = `/games/ai/${game.id}`;
@@ -583,7 +627,7 @@ export function useChat() {
     void refreshAllSessions(game);
   }, [game, visibleCount, refreshAllSessions]);
   useEffect(() => {
-    if (!game || sending) return;
+    if (guest || !game || sending) return;
     if (pendingNewChatPath.current) {
       if (pathname !== pendingNewChatPath.current) return;
       pendingNewChatPath.current = null;
@@ -607,6 +651,7 @@ export function useChat() {
       navigateToRoute: false,
     });
   }, [
+    guest,
     game,
     routeChatId,
     pathname,
@@ -631,11 +676,17 @@ export function useChat() {
     gameLoading,
     error,
     game,
-    loading,
-    selectedModel,
+    loading: loading || (guest && !guestChat.ready),
+    guest,
+    guestStatus: guestChat.status,
+    guestNotice: guestChat.notice,
+    rulesState: rulesPreparation.state,
+    refreshRules: rulesPreparation.refresh,
+    inputLimit,
+    selectedModel: guest ? (guestChat.status?.modelId ?? null) : selectedModel,
     handleChangeModel,
     modelChanging,
-    sending,
+    sending: guest ? guestChat.sending : sending,
     sidebarOpen,
     setSidebarOpen,
     setRulesSidebarOpen,
@@ -654,7 +705,7 @@ export function useChat() {
     router,
     chatError,
     chatLoading,
-    messages,
+    messages: guest ? guestChat.messages : messages,
     messagesRef,
     inputRef,
     input,

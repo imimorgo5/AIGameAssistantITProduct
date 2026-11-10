@@ -69,7 +69,7 @@
   font-weight: 800;
   color: var(--text);
   text-align: center;
-  margin-right: 72px;
+  margin: 0;
 }
 
 .search-wrap {
@@ -222,4 +222,23 @@
 .header-center.header-mobile {
   max-width: 1920px;
   margin-inline: auto;
+}
+
+@media (min-width: 600px) {
+  .header-inner.title-layout {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 2fr) minmax(200px, 1fr);
+    column-gap: 12px;
+  }
+
+  .title-layout .header-right {
+    justify-self: end;
+  }
+
+  .title-layout .header-title {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

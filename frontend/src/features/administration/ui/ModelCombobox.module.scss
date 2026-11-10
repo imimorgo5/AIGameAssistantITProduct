@@ -1,0 +1,78 @@
+.combobox {
+  flex: 1;
+  min-width: 0;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  background: var(--text-input);
+  border: 1px solid var(--text-input-border);
+  color: var(--text);
+}
+
+.input:focus {
+  border-color: var(--muted-yellow);
+}
+
+.list {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  box-sizing: border-box;
+  padding: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  border: 1px solid var(--section-border);
+  border-radius: 16px;
+  background: var(--chat-sidebar-bg);
+  color: var(--text);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--transition),
+    color var(--transition);
+}
+
+.option[data-active="true"],
+.option:hover {
+  background: var(--muted-yellow);
+}
+
+.option[aria-selected="true"] {
+  background: var(--yellow);
+  color: var(--bg);
+}
+
+.option:active {
+  background: var(--yellow);
+  color: var(--bg);
+}
+
+.identifier {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.price {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.empty {
+  padding: 12px;
+  font-size: 14px;
+  color: var(--muted-text);
+}

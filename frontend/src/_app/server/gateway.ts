@@ -130,13 +130,28 @@ export async function forwardApi(
     const body = mutation ? await readBody(request) : undefined;
     if (body && body.byteLength > limit)
       return failure("Файл слишком большой", 413);
-    const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
-    let accessToken = request.cookies.get(ACCESS_COOKIE)?.value;
+    const guest = segments[0] === "guest";
+    const refreshToken = guest
+      ? undefined
+      : request.cookies.get(REFRESH_COOKIE)?.value;
+    let accessToken = guest
+      ? undefined
+      : request.cookies.get(ACCESS_COOKIE)?.value;
     let renewed: SessionTokens | null = null;
     const headers = new Headers();
     for (const name of ["accept", "content-type", "range", "if-range"]) {
       const value = request.headers.get(name);
       if (value) headers.set(name, value);
+    }
+    if (guest) {
+      const identity = request.cookies.get("ga_guest")?.value;
+      if (identity && /^[a-f0-9-]{36}$/.test(identity))
+        headers.set("Cookie", `ga_guest=${identity}`);
+      const configuredIpHeader = process.env.GUEST_CLIENT_IP_HEADER;
+      if (configuredIpHeader) {
+        const address = request.headers.get(configuredIpHeader);
+        if (address) headers.set(configuredIpHeader, address);
+      }
     }
     const send = () => {
       if (accessToken && !establishesSession)
@@ -198,6 +213,11 @@ export async function forwardApi(
       status: upstream.status,
       headers: responseHeaders,
     });
+    if (guest) {
+      for (const cookie of upstream.headers.getSetCookie())
+        if (cookie.startsWith("ga_guest="))
+          response.headers.append("Set-Cookie", cookie);
+    }
     if (renewed) setSession(response, renewed, request);
     if (logout || upstream.status === 401) clearSession(response);
     return response;

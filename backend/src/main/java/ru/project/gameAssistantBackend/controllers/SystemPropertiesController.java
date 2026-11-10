@@ -54,8 +54,8 @@ public class SystemPropertiesController {
     @PreAuthorize("hasAuthority('ADMIN')")
     @PatchMapping("/model")
     public SystemPropertiesDTO updateModel(@jakarta.validation.Valid @RequestBody SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
-        catalog.requireEnabled(systemPropertiesDTO.model());
-        SystemProperties systemProperties = systemPropertiesServiceImpl.updateModel(systemPropertiesDTO);
+        catalog.change(systemPropertiesDTO.model(), null, false, true);
+        SystemProperties systemProperties = systemPropertiesServiceImpl.getSystemProperties();
         return mapToDTO(systemProperties);
     }
 

@@ -54,3 +54,7 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/029-password-reset-expiry.yaml
+  - include:
+      file: db/changelog/030-assistant-management.yaml
+  - include:
+      file: db/changelog/031-chat-generation-lease.yaml

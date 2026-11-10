@@ -8,10 +8,10 @@ import {
   CategoriesTable,
   GameForm,
   GamesTable,
+  ModelsTable,
   PromptEditor,
   UsersTable,
 } from "features/administration";
-import { ModelSelect } from "features/model-select";
 import { bindClasses } from "shared/lib/styles";
 import { FileViewer } from "shared/ui/file-viewer";
 import { Modal, ModalActions } from "shared/ui/modal";
@@ -27,8 +27,6 @@ export default function AdminPage() {
     activeTab,
     switchTab,
     logout,
-    selectedModel,
-    handleChangeModel,
     search,
     setSearch,
     setPage,
@@ -143,11 +141,8 @@ export default function AdminPage() {
       <main className={cx("admin-main")}>
         {activeTab === "settings" && (
           <>
-            <section className={cx("admin-section admin-model")}>
-              <div className={cx("admin-table-header")}>
-                <h2 className={cx("admin-table-title")}>Модель по умолчанию</h2>
-              </div>
-              <ModelSelect value={selectedModel} onChange={handleChangeModel} />
+            <section className={cx("admin-section")}>
+              <ModelsTable />
             </section>
             <section className={cx("admin-section")}>
               <div className={cx("admin-table-header")}>

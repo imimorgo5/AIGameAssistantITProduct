@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 38-assistant-management
+      author: aigameassistant
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE ai_catalog_state (id INTEGER PRIMARY KEY, initialized BOOLEAN NOT NULL);
+              INSERT INTO ai_catalog_state VALUES (1, false);
+              CREATE TABLE ai_model (id VARCHAR(64) PRIMARY KEY, name VARCHAR(100) NOT NULL, remote_id VARCHAR(256) NOT NULL UNIQUE, enabled BOOLEAN NOT NULL, max_output_tokens INTEGER NOT NULL CHECK (max_output_tokens BETWEEN 1 AND 32768));
+              CREATE TABLE guest_quota (bucket VARCHAR(128) PRIMARY KEY, quota_day DATE NOT NULL, used INTEGER NOT NULL, last_request TIMESTAMP WITH TIME ZONE);
+              CREATE TABLE guest_quota_lock (id INTEGER PRIMARY KEY);
+              INSERT INTO guest_quota_lock VALUES (1);
+              CREATE TABLE rule_document (file_title VARCHAR(512) PRIMARY KEY, status VARCHAR(20) NOT NULL, error VARCHAR(1000), content_hash VARCHAR(64), updated_at TIMESTAMP WITH TIME ZONE NOT NULL, attempts INTEGER NOT NULL DEFAULT 0);
+              INSERT INTO rule_document (file_title,status,updated_at) SELECT DISTINCT rules_file_title,'pending',CURRENT_TIMESTAMP FROM game WHERE rules_file_title IS NOT NULL;

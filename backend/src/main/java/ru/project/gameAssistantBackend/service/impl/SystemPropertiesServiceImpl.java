@@ -3,6 +3,7 @@ package ru.project.gameAssistantBackend.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import ru.project.gameAssistantBackend.dto.chat.SystemPropertiesDTO;
 import ru.project.gameAssistantBackend.exception.customEx.notFound.SystemPropertiesNotFoundException;
 import ru.project.gameAssistantBackend.models.SystemProperties;
@@ -21,8 +22,12 @@ public class SystemPropertiesServiceImpl implements SystemPropertiesService {
 
     @Override
     public SystemProperties getSystemProperties() throws SystemPropertiesNotFoundException {
-        return systemPropertiesRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new SystemPropertiesNotFoundException("Системные настройки не найдены"));
+        return systemPropertiesRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(
+                        () ->
+                                new SystemPropertiesNotFoundException(
+                                        "Системные настройки не найдены"));
     }
 
     @Override
@@ -32,17 +37,12 @@ public class SystemPropertiesServiceImpl implements SystemPropertiesService {
 
     @Transactional
     @Override
-    public SystemProperties updatePrompt(SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
+    public SystemProperties updatePrompt(SystemPropertiesDTO systemPropertiesDTO)
+            throws SystemPropertiesNotFoundException {
         SystemProperties systemProperties = getSystemProperties();
-        if (systemPropertiesDTO.prompt() == null || systemPropertiesDTO.prompt().isBlank()) throw new IllegalArgumentException("Системный промпт не может быть пустым");
+        if (systemPropertiesDTO.prompt() == null || systemPropertiesDTO.prompt().isBlank())
+            throw new IllegalArgumentException("Системный промпт не может быть пустым");
         systemProperties.setPrompt(systemPropertiesDTO.prompt());
-        return systemPropertiesRepository.save(systemProperties);
-    }
-
-    @Transactional
-    public SystemProperties updateModel(SystemPropertiesDTO systemPropertiesDTO) throws SystemPropertiesNotFoundException {
-        SystemProperties systemProperties = getSystemProperties();
-        systemProperties.setModel(systemPropertiesDTO.model());
         return systemPropertiesRepository.save(systemProperties);
     }
 }

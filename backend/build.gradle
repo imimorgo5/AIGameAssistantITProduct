@@ -45,5 +45,6 @@ dependencies {
 }
 
 tasks.named('test') {
+	inputs.property('assistantPostgresUrl', System.getenv('ASSISTANT_TEST_POSTGRES_URL') ?: '')
 	useJUnitPlatform()
 }
