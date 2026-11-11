@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { bindClasses } from "shared/lib/styles";
 
 import style1 from "./ChatMessage.module.scss";
+import MarkdownAnswer from "./MarkdownAnswer";
 
 import type { Message } from "../model/types";
 
@@ -78,7 +79,7 @@ export default function ChatMessage({ msg }: Props) {
               </span>
             </div>
           ) : (
-            <div className={cx("chat-message-text")}>{text}</div>
+            <MarkdownAnswer text={text} />
           )}
 
           {!isStreaming && (

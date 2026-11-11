@@ -78,6 +78,15 @@ test("protects routes on the server and hides tokens from browser JavaScript", a
     headers: { "X-Requested-With": "XMLHttpRequest" },
   });
   expect(await login.json()).toEqual({ success: true });
+  for (const path of [
+    "/login",
+    "/register",
+    "/reset-password",
+    "/reset-password?token=example",
+  ]) {
+    await page.goto(path);
+    await expect(page).toHaveURL("/");
+  }
   expect(
     (await context.cookies())
       .filter((cookie) => cookie.name.startsWith("ga_"))
@@ -135,9 +144,7 @@ test("keeps the first streamed answer and fits the chat in the viewport", async 
     .fill("Первый вопрос");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
   await expect(
-    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
-      exact: true,
-    }),
+    page.getByRole("heading", { name: "Подробно", exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/games\/ai\/7\/\d+$/);
   await expect(
@@ -165,9 +172,7 @@ test("keeps the first streamed answer and fits the chat in the viewport", async 
     page.getByText("Чем я могу помочь?", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
-      exact: true,
-    }),
+    page.getByRole("heading", { name: "Подробно", exact: true }),
   ).toHaveCount(0);
 });
 
@@ -682,9 +687,7 @@ test("supports a guest answer, local persistence, clear history and server-side 
     .fill("Как проходит ход?");
   await page.getByRole("button", { name: "Отправить", exact: true }).click();
   await expect(
-    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
-      exact: true,
-    }),
+    page.getByRole("heading", { name: "Подробно", exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText("Осталось вопросов на сегодня: 4 из 5"),
@@ -694,9 +697,7 @@ test("supports a guest answer, local persistence, clear history and server-side 
     page.getByText("Как проходит ход?", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("TL;DR: Первый ответ\n\nПодробно\nПравило из документа.", {
-      exact: true,
-    }),
+    page.getByRole("heading", { name: "Подробно", exact: true }),
   ).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath("guest-chat.png"),

@@ -23,10 +23,140 @@
 }
 
 .chat-message-plain {
+  min-width: 0;
   width: 100%;
   padding: 0;
   color: var(--text);
   word-break: break-word;
+}
+
+.chat-message-text.markdown {
+  white-space: normal;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote,
+.markdown pre,
+.markdown-table {
+  margin-block: 12px;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 20px 0 10px;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.markdown h1 {
+  font-size: 22px;
+}
+
+.markdown h2 {
+  font-size: 20px;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 24px;
+}
+
+.markdown li + li {
+  margin-top: 4px;
+}
+
+.markdown blockquote {
+  margin-inline: 0;
+  padding: 4px 16px;
+  border-left: 3px solid var(--muted-yellow);
+  color: var(--muted-text);
+}
+
+.markdown a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--muted-yellow);
+  text-underline-offset: 3px;
+  transition: color var(--transition);
+}
+
+.markdown a:hover,
+.markdown a:active {
+  color: var(--muted-yellow);
+}
+
+.markdown code {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--chat-sidebar-bg);
+  font-size: 0.9em;
+}
+
+.markdown pre {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid var(--section-border);
+  border-radius: var(--radius);
+  background: var(--chat-sidebar-bg);
+  white-space: pre;
+}
+
+.markdown pre code {
+  padding: 0;
+  background: transparent;
+}
+
+.markdown-table {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown th,
+.markdown td {
+  padding: 8px 12px;
+  border: 1px solid var(--section-border);
+  text-align: left;
+}
+
+.markdown th {
+  background: var(--chat-sidebar-bg);
+  font-weight: 700;
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--section-border);
+  margin-block: 20px;
+}
+
+.markdown pre,
+.markdown-table {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted-text) transparent;
 }
 
 .streaming-dots {

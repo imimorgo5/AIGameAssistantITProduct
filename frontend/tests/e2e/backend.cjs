@@ -82,7 +82,8 @@ let defaultModel = "test";
 const chats = new Map();
 const guests = new Map();
 let nextChat = 12;
-const answerText = "TL;DR: Первый ответ\n\nПодробно\nПравило из документа.";
+const answerText =
+  "**TL;DR:** Первый ответ\n\n## Подробно\n\nПравило из документа.\n\n| Действие | Цена |\n| --- | --- |\n| Ход | 2 |";
 const page = (content) => ({
   content,
   totalElements: content.length,
