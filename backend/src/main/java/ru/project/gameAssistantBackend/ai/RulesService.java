@@ -108,8 +108,8 @@ public class RulesService {
         if (title == null) return;
         try {
             Path source = files.resolveFile(title);
-            if (Files.size(source) > 10 * 1024 * 1024)
-                throw new IllegalArgumentException("Максимальный размер PDF — 10 МБ");
+            if (Files.size(source) > 20 * 1024 * 1024)
+                throw new IllegalArgumentException("Максимальный размер PDF — 20 МБ");
             byte[] bytes = Files.readAllBytes(source);
             String hash =
                     HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));

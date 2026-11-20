@@ -13,7 +13,8 @@ import { backendFetch } from "shared/api/backend";
 import type { SessionTokens } from "entities/session/server";
 import type { NextRequest } from "next/server";
 
-const limit = 10 * 1024 * 1024;
+// Allow a 20 MiB file plus multipart fields and boundaries.
+const limit = 21 * 1024 * 1024;
 const publicAuth = new Set([
   "login",
   "register",

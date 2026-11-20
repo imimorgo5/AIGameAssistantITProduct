@@ -167,7 +167,7 @@ test("rejects oversized uploads and traversal segments", async () => {
   const response = await forwardApi(
     request("/api/games", {
       method: "POST",
-      headers: { "Content-Length": "11000000" },
+      headers: { "Content-Length": String(21 * 1024 * 1024 + 1) },
     }),
     ["games"],
   );
@@ -182,12 +182,34 @@ test("enforces the upload limit even without Content-Length", async () => {
   const response = await forwardApi(
     request("/api/games", {
       method: "POST",
-      body: "x".repeat(10 * 1024 * 1024 + 1),
+      body: "x".repeat(21 * 1024 * 1024 + 1),
     }),
     ["games"],
   );
   expect(response.status).toBe(413);
   expect(backend).not.toHaveBeenCalled();
+});
+
+test("forwards a 20 MiB file including multipart overhead", async () => {
+  backend.mockResolvedValue(Response.json({ id: 1 }));
+  const form = new FormData();
+  form.set(
+    "file",
+    new Blob([new Uint8Array(20 * 1024 * 1024)], {
+      type: "application/pdf",
+    }),
+    "rules.pdf",
+  );
+  const response = await forwardApi(
+    request("/api/games", { method: "POST", body: form }),
+    ["games"],
+  );
+  expect(response.status).toBe(200);
+  expect(backend).toHaveBeenCalledTimes(1);
+  const body = backend.mock.calls[0]?.[1]?.body;
+  expect(body instanceof ArrayBuffer && body.byteLength > 20 * 1024 * 1024).toBe(
+    true,
+  );
 });
 
 test("accepts browser same-origin login when the public URL differs from the local dev address", async () => {
