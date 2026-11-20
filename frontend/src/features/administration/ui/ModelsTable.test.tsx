@@ -7,18 +7,16 @@ import ModelsTable from "./ModelsTable";
 afterEach(() => jest.restoreAllMocks());
 
 test("paginates models in groups of ten and disables navigation at the boundaries", async () => {
-  jest
-    .spyOn(modelApi, "getRegistry")
-    .mockResolvedValue({
-      defaultModel: "model-0",
-      models: Array.from({ length: 21 }, (_, index) => ({
-        id: `model-${index}`,
-        name: `Модель ${index}`,
-        remoteId: `test/model-${index}`,
-        enabled: true,
-        maxOutputTokens: 4096,
-      })),
-    });
+  jest.spyOn(modelApi, "getRegistry").mockResolvedValue({
+    defaultModel: "model-0",
+    models: Array.from({ length: 21 }, (_, index) => ({
+      id: `model-${index}`,
+      name: `Модель ${index}`,
+      remoteId: `test/model-${index}`,
+      enabled: true,
+      maxOutputTokens: 4096,
+    })),
+  });
   render(<ModelsTable />);
   const table = await screen.findByRole("table");
   expect(within(table).getAllByRole("row")).toHaveLength(11);
