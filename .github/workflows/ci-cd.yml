@@ -1,0 +1,139 @@
+name: CI and deploy
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Do not interrupt a deployment already in progress. GitHub may replace pending runs.
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deployment-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash -n deploy/deploy.sh
+      - name: Validate production Compose with dummy credentials
+        env:
+          IMAGE_PREFIX: ghcr.io/example/project
+          IMAGE_TAG: ${{ github.sha }}
+          POSTGRES_PASSWORD: ci-placeholder
+          JWT_SECRET_ACCESS: ci-placeholder-access
+          JWT_SECRET_REFRESH: ci-placeholder-refresh
+        run: docker compose --env-file deploy/.env.example -f deploy/compose.yml config --quiet
+
+  frontend-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run check
+        working-directory: frontend
+
+  images:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Image names
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: echo "prefix=ghcr.io/${REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Backend Dockerfile runs Gradle tests before producing the runtime image.
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          platforms: linux/amd64
+          push: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+          tags: ${{ steps.image.outputs.prefix }}-${{ matrix.service }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    needs: [deployment-checks, frontend-checks, images]
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip superseded commits
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          head=$(gh api "repos/$REPOSITORY/commits/master" --jq .sha)
+          if [ "$head" = "$COMMIT" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'A newer commit exists; skipping this deployment.'
+          fi
+      - name: Upload release and deploy
+        if: steps.latest.outputs.deploy == 'true'
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          : "${SSH_HOST:?Set SSH_HOST}" "${SSH_USER:?Set SSH_USER}"
+          : "${SSH_PRIVATE_KEY:?Set SSH_PRIVATE_KEY}" "${SSH_KNOWN_HOSTS:?Set SSH_KNOWN_HOSTS}"
+          port=${SSH_PORT:-22}
+          [[ "$port" =~ ^[0-9]+$ ]] && (( port > 0 && port <= 65535 ))
+          [[ "$SSH_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]]
+          key=$(mktemp)
+          known_hosts=$(mktemp)
+          archive=$(mktemp)
+          trap 'rm -f "$key" "$known_hosts" "$archive"' EXIT
+          chmod 600 "$key" "$known_hosts"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$known_hosts"
+          options=(-i "$key" -o BatchMode=yes -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$known_hosts"
+            -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4)
+          target="$SSH_USER@$SSH_HOST"
+          release="/opt/game-assistant/releases/$COMMIT"
+          tar -czf "$archive" -C deploy compose.yml Caddyfile deploy.sh \
+            -C ../backend/config ai-models.yaml
+          ssh "${options[@]}" -p "$port" "$target" "mkdir -p '$release'"
+          scp "${options[@]}" -P "$port" "$archive" "$target:$release/release.tar.gz"
+          ssh "${options[@]}" -p "$port" "$target" \
+            "tar -xzf '$release/release.tar.gz' -C '$release' && bash '$release/deploy.sh' 'ghcr.io/${REPOSITORY,,}' '$COMMIT'"

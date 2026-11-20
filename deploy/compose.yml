@@ -1,0 +1,137 @@
+# Production stack; independent of the development compose file.
+services:
+  frontend:
+    image: ${IMAGE_PREFIX:?Set IMAGE_PREFIX}-frontend:${IMAGE_TAG:?Set IMAGE_TAG}
+    environment:
+      BACKEND_URL: http://backend:8080
+      GUEST_CLIENT_IP_HEADER: X-Real-IP
+      APP_PUBLIC_URL: https://${APP_DOMAIN:?Set APP_DOMAIN}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  backend:
+    image: ${IMAGE_PREFIX:?Set IMAGE_PREFIX}-backend:${IMAGE_TAG:?Set IMAGE_TAG}
+    environment:
+      APP_PUBLIC_URL: https://${APP_DOMAIN:?Set APP_DOMAIN}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-game_assistant_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-app_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      JWT_SECRET_ACCESS: ${JWT_SECRET_ACCESS:?Set JWT_SECRET_ACCESS in .env}
+      JWT_SECRET_REFRESH: ${JWT_SECRET_REFRESH:?Set JWT_SECRET_REFRESH in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_LOGIN: ${ADMIN_LOGIN:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      EMAIL_ADDRESS: ${EMAIL_ADDRESS:-noreply@example.com}
+      EMAIL_APP_PASSWORD: ${EMAIL_APP_PASSWORD:-}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-mailpit}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-1025}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-false}
+      GUEST_DAILY_BUDGET: ${GUEST_DAILY_BUDGET:-200}
+      GUEST_CLIENT_IP_HEADER: X-Real-IP
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_TIMEOUT_SECONDS: ${OPENROUTER_TIMEOUT_SECONDS:-60}
+      PROXY_HOST: ${PROXY_HOST:-}
+      PROXY_PORT: ${PROXY_PORT:-1080}
+      PROXY_LOGIN: ${PROXY_LOGIN:-}
+      PROXY_PASSWORD: ${PROXY_PASSWORD:-}
+    volumes:
+      - uploads:/app/uploads
+      - type: bind
+        source: ./ai-models.yaml
+        target: /app/config/ai-models.yaml
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "5", "http://127.0.0.1:8080/api/categories"]
+      interval: 15s
+      timeout: 10s
+      start_period: 120s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-game_assistant_db}
+      POSTGRES_USER: ${POSTGRES_USER:-app_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - type: bind
+        source: ./Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind:
+          create_host_path: false
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+  pgdata:
+  uploads:
