@@ -30,7 +30,7 @@ export function fileError(
 ): string {
   if (!file) return existing ? "" : "Выберите файл";
 
-  const maximum = kind === "image" ? 5 : 10;
+  const maximum = kind === "image" ? 5 : 20;
   if (file.size > maximum * 1024 * 1024)
     return `Максимальный размер — ${maximum} МБ`;
 
