@@ -108,10 +108,11 @@ PDF-правила загружаются через форму игры в ад
 SPRING_MAIL_HOST=smtp.gmail.com
 SPRING_MAIL_PORT=587
 EMAIL_ADDRESS=sender@example.com
+EMAIL_SENDER_NAME=AIGameAssistant
 EMAIL_APP_PASSWORD=your-app-password
 SMTP_AUTH=true
 SMTP_STARTTLS=true
 APP_PUBLIC_URL=https://your-domain.example
 ```
 
-`EMAIL_ADDRESS` используется как SMTP-логин и отправитель. Подставьте собственные значения и примените `docker compose up -d backend`. При изменении публичного адреса также пересоздайте frontend: `docker compose up -d frontend`.
+`EMAIL_ADDRESS` используется как SMTP-логин и адрес отправителя. `EMAIL_SENDER_NAME` задаёт отображаемое имя отправителя; по умолчанию — `AIGameAssistant`. Оно используется в письмах подтверждения регистрации и сброса пароля. Подставьте собственные значения и примените `docker compose up -d backend`. При изменении публичного адреса также пересоздайте frontend: `docker compose up -d frontend`.

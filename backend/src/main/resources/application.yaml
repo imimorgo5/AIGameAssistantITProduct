@@ -42,6 +42,8 @@ spring:
 
 app:
     public-url: ${APP_PUBLIC_URL:http://localhost}
+    mail:
+      sender-name: ${EMAIL_SENDER_NAME:AIGameAssistant}
     admin:
       email: ${ADMIN_EMAIL:}
       login: ${ADMIN_LOGIN:admin}
